@@ -1,0 +1,152 @@
+---
+title: "NSC report"
+author: "Jiahua Chen"
+date: "2023-12-18"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("tidyverse")
+#install.packages("modelsummary")
+#install.packages("flextable")
+library(tidyverse)
+library(modelsummary)
+library(flextable)
+```
+
+## Data cleaning
+
+```{r}
+Canada <- readxl::read_excel("code/data/Canada.xlsx")
+Canada$country <- "Canada"
+US <- readxl::read_excel("code/data/United States.xlsx")
+US$country <- "US"
+```
+
+```{r}
+df <- rbind(Canada,US)
+
+df <- df %>%
+  mutate(age = as.numeric(age)) %>% 
+  mutate(birthmonth = as.numeric(birthmonth)) %>% 
+  dplyr::filter(report_date > as.Date('2016-11-30')) %>% 
+  dplyr::select(-c(date,details,impact,pk,direction,x,y)) %>% 
+  mutate(ebike = ifelse(is.na(ebike),"NA",ebike)) %>% 
+  mutate_if(is.character,as.factor) %>% 
+  mutate(ebike=fct_relevel(ebike,c("Yes","No","I don't know","NA"))) 
+  
+
+```
+
+## Data Summary
+
+**SInce December 2016, what proportion of incidents involved an ebike in the U.S. and Canada?** NA indicates no response.
+
+```{r, echo=FALSE}
+df_sum %>% 
+  mutate(country=fct_relevel(country,c("US","Canada"))) %>% 
+  mutate(ebike = fct_relevel(ebike,c("Yes","No","I don't know"))) %>% 
+  dplyr::rename(Response = ebike) %>% 
+  datasummary_crosstab(Response ~ country, statistic = . ~ N, data = .,
+                       output = 'flextable') %>% 
+  width(width=2)
+```
+
+In separate tables:
+
+```{r}
+df_sum %>% 
+ filter(country=="US") %>% 
+  mutate(ebike = fct_relevel(ebike,c("Yes","No","I don't know"))) %>% 
+  dplyr::rename(Response = ebike) %>% 
+  datasummary(Response ~ N, data = .,
+              title = 'Ebike vs Pedal Bike in the US',
+              output = 'flextable') %>% 
+  width(width=2) 
+
+df_sum %>% 
+ filter(country=="Canada") %>% 
+  mutate(ebike = fct_relevel(ebike,c("Yes","No","I don't know"))) %>% 
+  dplyr::rename(Response = ebike) %>% 
+  datasummary(Response ~ N, data = .,
+              title = 'Ebike vs Pedal Bike in Canada',
+              output = 'flextable') %>% 
+  width(width=2)
+```
+
+### Gender
+
+```{r}
+df_sum <- df %>% 
+  #mutate_if(is.factor, ~replace(., . %in% values_to_convert, NA)) %>% 
+     mutate(across(where(is.factor), ~fct_drop(.))) %>% #drop the changed factors
+      mutate(gender = fct_collapse(gender,Male=c("['M']"),
+                               Female=c("['F']"),
+                               Unknown = "[]",
+                               other_level = 'Other')) 
+      
+
+
+```
+
+```{r}
+df_sum %>% 
+  mutate(gender = fct_relevel(gender,c("Female","Male","Other","Unknown"))) %>% 
+  filter(country=="Canada") %>% 
+  datasummary(ebike ~ gender, statistic = 1~N, fmt = 0, data = .) 
+
+df_sum %>% 
+  mutate(gender = fct_relevel(gender,c("Female","Male","Other","Unknown"))) %>% 
+  filter(country=="Canada") %>% 
+  datasummary_crosstab(ebike ~ gender, statistic = 1 ~ Percent('row'), fmt = 0, data = .) 
+```
+
+### Age
+
+```{r}
+{r}
+## calculate age
+
+df_age <- df %>% mutate(month_imp = case_when(!is.na(age)&is.na(birthmonth) ~ 1,
+                                              !is.na(birthmonth) ~ birthmonth)) %>%
+  mutate(date = as.character(with(., sprintf("%d-%02d", age, month_imp)))) %>%
+  mutate(date_imp = ifelse(is.na(age), as.integer(NA), paste(date, "-01", sep="")))
+  
+df_age$date_imp <- as.Date(df_age$date_imp)
+
+age_func <- function(dob, age.day, units = "years", floor = TRUE) {
+    calc.age = lubridate::interval(dob, age.day) / lubridate::duration(num = 1, units = units)
+    if (floor) return(as.integer(floor(calc.age)))
+    return(calc.age)
+}
+
+df_age$age_imp <- age_func(df_age$date_imp,df_age$report_date)
+df_age <- df_age %>% 
+  mutate(age_group = case_when(
+      age_imp <= 12            ~ "0-12",
+      age_imp > 13 & age_imp <= 17 ~ "13-17",
+      age_imp > 18 & age_imp <= 24 ~ "18-24",
+      age_imp > 25 & age_imp <= 34 ~ "25-34",
+      age_imp > 35 & age_imp <= 44 ~ "35-44",
+      age_imp > 45 & age_imp <= 54 ~ "45-54",
+      age_imp > 55 & age_imp <= 64 ~ "55-64",
+      age_imp > 65 & age_imp <= 74 ~ "65-74",
+      age_imp > 75            ~ "75+"
+    ),
+    age_group = as.factor(age_group)) %>% 
+  mutate(age_group=fct_relevel(age_group,c("0-12","13-17","18-24","25-34","35-44","45-54","55-64","65-74","75+")))
+```
+
+```{r}
+df_age %>% 
+  filter(country=="Canada") %>%
+  datasummary_crosstab(ebike ~ age_group, 
+                     statistic = 1 ~ N,data=.)
+
+df_age %>% 
+  filter(country=="Canada") %>% 
+  datasummary_crosstab(ebike ~ age_group, 
+                     statistic = 1 ~ Percent("row"), data=.)
+  
+```

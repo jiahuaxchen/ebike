@@ -13,11 +13,13 @@ knitr::opts_chunk$set(echo = FALSE,warning = FALSE, fig.align = "center")
 #install.packages("tidyverse")
 #install.packages("modelsummary")
 #install.packages("flextable")
+install.packages("naniar")
 library(officer)
 library(viridis)
 library(tidyverse)
 library(modelsummary)
 library(flextable)
+library(naniar)
 ```
 
 ```{r}
@@ -43,8 +45,9 @@ df <- df %>%
   mutate(ebike = ifelse(is.na(ebike),"NA",ebike)) %>% 
   mutate_if(is.character,as.factor) %>% 
   mutate(ebike=fct_relevel(ebike,c("Yes","No","I don't know","NA"))) 
-  
 
+
+vis_miss(df)
 ```
 
 ## Data Summary
@@ -58,7 +61,7 @@ NA indicates no response.
 ```{r, echo=FALSE}
 df %>% 
   mutate(country=fct_relevel(country,c("US","Canada"))) %>% 
-  mutate(ebike = fct_relevel(ebike,c("Yes","No","I don't know"))) %>% 
+  mutate(ebike = fct_relevel(ebike,c("Yes","No","I don't know","NA"))) %>% 
 #  dplyr::rename(Response = ebike) %>% 
   datasummary_crosstab(ebike ~ country, statistic = . ~ N, data = .,
                        output = 'flextable') %>%
@@ -111,6 +114,16 @@ df %>%
   bold(bold = TRUE, part = "header") 
 ```
 
+## EBike vs Injury
+
+```{r}
+
+ggplot(df_sum,aes(x=ebike,fill=injury_level)) +
+  geom_bar(position="fill") +
+  scale_fill_viridis (discrete = T) +
+  coord_flip()
+```
+
 ## Gender vs Injury
 
 ```{r}
@@ -156,13 +169,14 @@ df_sum %>%
 ### **What are the injury level by gender?**
 
 ```{r}
-df_sum <- df_sum %>% 
-  mutate(injury_level = fct_collapse(injury,
-                                     "No injury"=c("No injury"),
-                                     "Injury no treatment"=c("Injury, no treatment"),
-                                     "Injury with treatment"=c("Injury, hospitalized",
-                                                               "Injury, saw family doctor",
-                                                               "Injury, hospital emergency visit"), Unknown=c("Unknown")))
+
+df_sum <- df_sum %>%
+  mutate(injury_level = as.factor(ifelse(is.na(injury_level),"NA",injury))) %>%
+  mutate(injury_level = fct_collapse(injury,"No injury"=c("No injury"), "Injury no treatment"=c("Injury, no treatment"),"Injury with treatment"=c("Injury, hospitalized","Injury, saw family doctor","Injury, hospital emergency visit"), Unknown=c("Unknown"),"NA"="NA"))
+  
+summary(df$injury)
+summary(df_sum$injury_level)
+
 ```
 
 #### Raw count

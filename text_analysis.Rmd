@@ -12,14 +12,23 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages("wordcloud")
 library(textdata)
 library(tidytext)
+library(dplyr)
 library(ggplot2)
+```
+
+```{r}
+Canada <- readxl::read_excel("code/data/Canada.xlsx")
+Canada$country <- "Canada"
+US <- readxl::read_excel("code/data/United States.xlsx")
+US$country <- "US"
+df <- rbind(Canada,US)
 ```
 
 ## Why injured from near-miss?
 
 ```{r}
 df_nearmiss_injured <- df %>% 
-  filter(injury!="No injury"&p_type=="nearmiss") %>% 
+  filter(injury!="No injury" & p_type=="nearmiss") %>% 
   select(details)
 ```
 
@@ -41,8 +50,6 @@ total_words <- details %>%
 details_words <- left_join(details, total_words)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
 ## Injured + Ebike
 
 ```{r}
@@ -51,11 +58,11 @@ tidy_ebike <- df %>%
   dplyr::filter(report_date > as.Date('2016-11-30')) %>% 
   select(details) %>% 
   unnest_tokens(word, details) %>%
-  anti_join(stop_words)
+  anti_join(stop_words) %>% 
+  count(word, sort = TRUE) 
 
 tidy_ebike %>%
-  count(word, sort = TRUE) %>%
-  filter(n > 15) %>%
+  filter(n > 50) %>%
   mutate(word = reorder(word, n)) %>%
   ggplot(aes(n, word)) +
   geom_col() +
@@ -70,10 +77,10 @@ tidy_pedal <- df %>%
   filter(ebike=="No") %>% 
   select(details) %>% 
   unnest_tokens(word, details) %>%
-  anti_join(stop_words)
+  anti_join(stop_words) %>% 
+  count(word, sort = TRUE) 
 
 tidy_pedal %>%
-  count(word, sort = TRUE) %>%
   filter(n > 50) %>%
   mutate(word = reorder(word, n)) %>%
   ggplot(aes(n, word)) +
@@ -148,7 +155,8 @@ df %>%
 
 ```{r}
 df %>% 
-  filter(injury!="No Injury"&!is.na(injury)&ebike=="Yes") %>% 
+  #filter(injury!="No Injury"&!is.na(injury)&ebike=="Yes") %>% 
+  filter(ebike=="Yes") %>% 
   select(details) %>% 
   unnest_tokens(word, details) %>%
   anti_join(stop_words) %>% 

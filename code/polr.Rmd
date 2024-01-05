@@ -35,8 +35,10 @@ data <- data %>%
   #drop column that are not related to injury prediction
   dplyr::select(-c(date,details,impact,pk,direction,x,y)) %>%
   #drop all column with more than 50% missing
-  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50)
-vis_miss(data)
+  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50) %>% 
+  filter(personal_involvement != "No")
+
+vis_miss(data) 
 ```
 
 ### Calculate age at report
@@ -118,7 +120,7 @@ data3 <- data %>%
                                       pedestrian = "Pedestrian",
                                       other_level = "other"))
   
-summary(data3$incident_with)
+summary(data3$gender)
 # summary(data3$gender) 
 # the factor label can't not be the same as the level
 
@@ -148,6 +150,40 @@ regular <- data3 %>%
   filter(ebike == "No" ) %>% 
   dplyr::select(-c(injury,ebike))
 
+```
+
+## All bike
+
+### Data manipulation
+
+```{r}
+all_bike <- data3 %>% 
+    select(-c(p_type,age,geometry,report_date,personal_involvement,injury,birthmonth,infrastructure_changed,age_group))
+```
+
+```{r}
+#imputation recipe
+data_recipe_all <- recipe(injury_level ~ . , data = all_bike) %>%
+  step_impute_bag(i_type , incident_with, trip_purpose, regular_cyclist , helmet , road_conditions , sightlines , cars_on_roadside , bike_lights , terrain , bicycle_type , turning , age_imp , gender, ebike)
+```
+
+```{r,eval=FALSE}
+all_imputed <- 
+  prep(data_recipe_all) %>% bake(new_data = all_bike)
+
+save(all_imputed, file="20240105_allimputed.rda")
+```
+
+### Model
+
+```{r}
+load("20240105_allimputed.rda")
+```
+
+```{r}
+library(MASS)
+model_all <- polr(injury_level ~ .,data=all_imputed, Hess=TRUE)
+summary(model_all)
 ```
 
 ## Ebike

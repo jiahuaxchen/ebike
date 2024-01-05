@@ -52,7 +52,7 @@ vis_miss(df)
 
 ## Data Summary
 
-### **SInce December 2016, how many incidents involved an ebike in the U.S. and Canada?** 
+### **SInce December 2016, how many incidents involved an ebike in the U.S. and Canada?**
 
 NA indicates no response.
 

@@ -184,10 +184,56 @@ save(all_imputed, file="20240105_allimputed.rda")
 load("20240105_allimputed.rda")
 ```
 
+### Logistic model
+
+```{r}
+all_imputed <- all_imputed %>% 
+  mutate(injury_bin = as.factor((injury_level!="A")))
+
+model_logi <- glm(injury_bin ~.-injury_level, data = all_imputed, family = "binomial")
+
+plot_summs(model_logi)
+Anova(model_logi)
+
+model_logi.1 <- update(model_logi,.~.-i_type)
+Anova(model_logi.1)
+
+## add interaction
+model_logi_int <- update(model_logi,.~. + terrain * ebike + age_imp * ebike + gender * ebike)
+Anova(model_logi_int)
+plot_summs(model_logi_int)
+```
+
+### Polr model
+
 ```{r}
 library(MASS)
 model_all <- polr(injury_level ~ .,data=all_imputed, Hess=TRUE)
 summary(model_all)
+
+library(car)
+Anova(model_all)
+
+library(jtools)
+library(broom.mixed)
+plot_summs(model_all)
+```
+
+#### With interaction with ebike
+
+```{r}
+# use ebike to interact with speed related terms (terrain) and other significant terms from the ebike polr model (cars_on_roadside, turning)
+model_all_int <- update(model_all,.~. + cars_on_roadside * ebike + terrain * ebike + turning * ebike)
+Anova(model_all_int)
+plot_summs(model_all_int)
+# no interaction shows up as significant
+
+```
+
+```{r}
+model_all_int.1 <- update(model_all_int,.~. - + cars_on_roadside * ebike - turning * ebike + gender * ebike + age_imp * ebike)
+Anova(model_all_int.1)
+plot_summs(model_all_int.1)
 ```
 
 ## Ebike

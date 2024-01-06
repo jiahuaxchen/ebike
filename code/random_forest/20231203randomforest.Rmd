@@ -1,0 +1,228 @@
+---
+title: "20231203_rf"
+author: "Jiahua Chen"
+date: "2023-12-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidymodels)
+tidymodels_prefer()
+```
+
+# Random forest
+
+## Ebike
+
+### Create data fold
+
+```{r}
+#split dataset
+load("20231203_ebikeimputedlump.rda")
+set.seed(1208)
+ebike_fold <- vfold_cv(ebike_imputed_lump, v = 5, 
+                      strata = "injury_level")
+```
+
+### Recipe
+
+```{r}
+#install.packages("themis")
+library(themis)
+
+ebike_recipe <- recipe(injury_level ~ . , data = ebike_imputed_lump) %>%
+  # step_impute_bag(i_type , incident_with , personal_involvement, trip_purpose,
+  #                 regular_cyclist , helmet , road_conditions , sightlines ,
+  #                 cars_on_roadside , bike_lights , terrain , bicycle_type ,
+  #                 direction , turning , age , gender) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_upsample(injury_level, over_ratio = 0.5, skip = TRUE)
+
+#ebike_test <- prep(ebike_recipe) %>% bake(new_data = ebike_rf)
+```
+
+### Workflow
+
+```{r}
+#install.packages("ranger")
+library(ranger)
+library(yardstick)
+
+ebike_rf_mod <- rand_forest(
+  mtry = tune(),
+  trees = tune(),
+  min_n = tune()
+) %>%
+  set_mode("classification") %>%
+  set_engine("ranger",importance = "impurity")
+
+ebike_rf_wkflow <- workflow() %>% 
+  add_model(ebike_rf_mod) %>% 
+  add_recipe(ebike_recipe)
+```
+
+### Tune grid
+
+```{r,eval=FALSE}
+# with 1000 tree and min_n=25, tune mtry from 10-40, see a decreasing trend, may need a smaller mtry.. decreasing trend from 1-10 as well (but within a difference with 0.1), so will use mtry=c(1,3). 
+## with 1000 tree and mtry=3, tune min_n from 1-50, doesn't vary too much (roc from 0.782-0.790), will use min_n=c(1,6).
+# trees doesn't change the results much so will try 600-1000
+ebike_rf_grid  <- grid_regular(mtry(range = c(1L,3L)),
+                              min_n(range = c(2,6)),
+                              trees(range = c(600,1000)),
+                              levels = 3)
+ebike_rf_grid
+
+ebike_rf_results <- tune_grid(ebike_rf_wkflow,
+                          resamples = ebike_fold,
+                          grid = ebike_rf_grid)
+
+autoplot(ebike_rf_results)
+save(ebike_rf_results,file="20231203_ebiketunegrid.rda")
+```
+
+```{r}
+load("20231203_ebiketunegrid.rda")
+```
+
+```{r}
+#select best
+best_ebike <- select_best(ebike_rf_results)
+
+#finalize workflow
+ebike_rf_final <- finalize_workflow(ebike_rf_wkflow, best_ebike)
+
+#fit to train set
+ebike_rf_fit <- fit_resamples(
+  ebike_rf_final,
+  resamples = ebike_fold,
+  control = control_resamples(save_pred = TRUE))
+
+ebike_fit <- fit(ebike_rf_final, ebike_imputed_lump)
+
+library(vip)
+ebike_fit %>%
+  extract_fit_parsnip() %>%
+  vip(geom = "point")
+
+```
+
+## Regular Bike
+
+### Load data
+
+```{r}
+load("20231202_regularimputed.rda")
+
+regular_fold <- vfold_cv(regular_imputed,v=5,
+                         strata = "injury_level")
+
+```
+
+### Recipe
+
+```{r}
+#library for upscaling the data
+library(themis)
+regular_recipe <- recipe(injury_level ~ . , data = regular_imputed) %>%
+  # step_impute_bag(i_type , incident_with , personal_involvement, trip_purpose,
+  #                 regular_cyclist , helmet , road_conditions , sightlines ,
+  #                 cars_on_roadside , bike_lights , terrain , bicycle_type ,
+  #                 direction , turning , age , gender) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_upsample(injury_level, over_ratio = 0.5, skip = TRUE)
+```
+
+### Workflow
+
+```{r}
+#install.packages("ranger")
+library(ranger)
+library(yardstick)
+
+regular_rf_mod <- rand_forest(
+  mtry = tune(),
+  trees = 1000,
+  min_n = tune(),
+) %>%
+  set_mode("classification") %>%
+  set_engine("ranger",importance = "impurity")
+
+regular_rf_wkflow <- workflow() %>% 
+  add_model(regular_rf_mod) %>% 
+  add_recipe(regular_recipe)
+```
+
+### Tune grid
+
+```{r,eval=FALSE}
+# with 1000 tree and min_n=50, tune mtry from 1-40, see a decreasing trend (but within a difference with 0.004), so will use mtry=c(2,6). 
+## with 1000 tree and mtry=5, tune min_n from 1-10, doesn't vary too much (roc from 0.7725-0.7755), try 10-50, doesn't vary too much either, (roc from 0.775-0.777),will use min_n=c(30,60).
+# trees doesn't change the results much so will keep 1000
+regular_rf_grid  <- grid_regular(mtry(range = c(2L,6L)),
+                              min_n(range = c(30,60)),
+                              #trees(range = c(600,1000)),
+                              levels = 5)
+regular_rf_grid
+
+regular_rf_results <- tune_grid(regular_rf_wkflow,
+                          resamples = regular_fold,
+                          grid = regular_rf_grid)
+
+autoplot(regular_rf_results)
+save(regular_rf_results,file="20231203_regulartunegrid.rda")
+```
+
+```{r}
+load("20231203_regulartunegrid.rda")
+```
+
+```{r}
+#select best
+best_regular <- select_best(regular_rf_results)
+
+#finalize workflow
+regular_rf_final <- finalize_workflow(regular_rf_wkflow, best_regular)
+
+#fit to all data
+regular_rf_fit <- fit_resamples(
+  regular_rf_final,
+  resamples = regular_fold,
+  control = control_resamples(save_pred = TRUE))
+
+regular_fit <- fit(ebike_rf_final, regular_imputed)
+
+library(vip)
+regular_fit %>%
+  extract_fit_parsnip() %>%
+  vip(geom = "point")
+
+```
+
+### Partial dependence plot
+
+```{r}
+## Looping over variables ranked by importance:
+set.seed(1208)
+#install.packages("randomForest")
+library(randomForest)
+regular_fit_pdp <- randomForest(injury_level~.,data=regular_imputed,
+                            mtry=2, nodesize=45, ntree=1000,
+                            importance=TRUE)
+regular_fit_pdp
+
+partialPlot(x=regular_fit_pdp, pred.data=regular_imputed, x.var=i_type, which.class="TRUE")
+
+imp <- importance(regular_fit_pdp)
+imp
+impvar <- rownames(imp)[order(imp[, 1], decreasing=TRUE)]
+op <- par(mfrow=c(2, 3))
+for (i in seq_along(impvar)) {
+    partialPlot(regular_fit_pdp, regular_imputed, impvar[i], xlab=impvar[i],
+                main=paste("Partial Dependence on", impvar[i]),which.class="TRUE"
+               )
+}
+par(op)
+```

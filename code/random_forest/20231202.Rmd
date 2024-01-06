@@ -1,0 +1,443 @@
+---
+title: "Ordinal Logistic Model"
+author: "Jiahua Chen"
+date: "2023-12-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE)
+library(tidyverse)
+library(tidymodels)
+tidymodels_prefer()
+```
+
+## Ordinal Logistic Model
+
+### Data
+
+```{r}
+set.seed(1208)
+
+data <- read_csv("world.xlsx - Incident.csv")
+
+data <- data %>% 
+  dplyr::filter(date > as.Date('2016-11-30')) 
+
+# missing data
+#install.packages("naniar")
+library(naniar)
+
+data <- data %>%
+  #drop column that are not related to injury prediction
+  dplyr::select(-c(date,details,impact,pk,longitude,latitude)) %>%
+  #drop all column with more than 50% missing
+  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50)
+vis_miss(data)
+```
+
+```{r}
+#install.packages("forcats")
+library(forcats)
+
+data <- data %>% 
+  mutate_if(is.character,as.factor)
+#summary(data$sightlines)
+
+#regroup outcome
+data3 <- data %>% 
+  mutate(injury_level = fct_collapse(injury,A=c("No injury"),
+                                     B=c("Injury, no treatment"),
+                                     C=c("Injury, hospitalized","Injury, saw family doctor","Injury, hospital emergency visit"),
+                                     Unknown=c("Unknown"),
+                                     level=c("A","B","C"))) %>% 
+  mutate(gender = fct_collapse(gender,M=c("M"),
+                               F=c("F"),
+                               O=c("O","NBY","P"))) %>% 
+  # lump incidents with vehicles
+  mutate(incident_with = fct_collapse(incident_with, vehicle = 
+                                        c("Vehicle, turning right",
+                                          "Vehicle, head on",
+                                          "Vehicle, passing",
+                                          "Vehicle, turning left",
+                                          "Vehicle, angle",
+                                          "Vehicle, rear end",
+                                          "Vehicle, side",
+                                          "Vehicle, open door"),
+                                      bicyclist = "Another cyclist",
+                                      pedestrian = "Pedestrian",
+                                      other_level = "other"))
+  
+summary(data3$incident_with)
+# summary(data3$gender) 
+# the factor label can't not be the same as the level
+
+#convert data into NA
+values_to_convert <- c("I don't know", "Don't remember",  "Don't Remember","I don't remember","Unknown")
+# Use dplyr to convert values to NA in the entire dataset
+data3 <- data3 %>%
+  mutate_if(is.factor, ~replace(., . %in% values_to_convert, NA)) %>% 
+     mutate(across(where(is.factor), ~fct_drop(.))) %>% #drop the changed factors
+      drop_na(injury_level) #drop NAs in the outcome variable
+
+#reorder factor level by frequency (start with most frequent)
+ data3 <- data3 %>%
+   mutate_if(is.factor,~fct_infreq(.))
+data3$injury_level <- factor(data3$injury_level, levels=c('A', 'B', 'C')) 
+summary(data3$injury_level)
+```
+
+```{r}
+library(naniar)
+#split dataset
+ebike <- data3 %>% 
+  filter(ebike == "Yes" ) %>% 
+  dplyr::select(-c(injury,ebike)) 
+
+regular <- data3 %>% 
+  filter(ebike == "No" ) %>% 
+  dplyr::select(-c(injury,ebike))
+
+```
+
+## Ebike
+
+### EDA
+
+```{r}
+# information in p_type is included in i_type so drop p_type
+ggplot(ebike,aes(x=p_type,fill=i_type)) +
+  geom_bar(position="fill")
+
+# i_type
+ggplot(ebike,aes(x=i_type,fill=injury_level)) +
+  geom_bar(position="fill") +
+  coord_flip()
+
+ggplot(ebike,aes(x=i_type,fill=injury_level)) +
+  geom_bar() +
+  coord_flip()
+
+# bicycle type
+ggplot(ebike,aes(x=bicycle_type,fill=injury_level)) +
+  geom_bar(position="fill")
+
+# incident with 
+ggplot(ebike,aes(x=incident_with,fill=injury_level)) +
+  geom_bar(position="fill")
+
+ggplot(ebike,aes(x=incident_with,fill=injury_level)) +
+  geom_bar()
+
+# car on the road side
+ggplot(ebike,aes(x=cars_on_roadside,fill=injury_level)) +
+  geom_bar()
+
+# turning
+ggplot(ebike,aes(x=turning,fill=injury_level)) +
+  geom_bar()
+ggplot(ebike,aes(x=turning,fill=injury_level)) +
+  geom_bar(position="fill")
+
+# gender
+ggplot(ebike,aes(x=gender,fill=injury_level)) +
+  geom_bar(position="fill")
+
+# age
+ggplot(ebike,aes(x=injury_level,y=age)) +
+  geom_boxplot()
+```
+
+### Data manipulation
+
+```{r}
+ebike <- ebike %>% 
+   mutate(bicycle_type = droplevels(bicycle_type)) 
+
+ebike <- ebike %>% 
+    select(-p_type)
+
+```
+
+### Test colinearity
+
+```{r,eval=FALSE}
+# method 1
+lookup_vec <- setNames(names(ebike),
+                       paste0("Q", seq_along(ebike)))
+ebike_cor <- ebike %>% 
+  rename(any_of(lookup_vec))
+
+library(ggcorrplot)
+model.matrix(~0+., data=ebike_cor[1:5]) %>% 
+  cor(use="pairwise.complete.obs") %>% 
+  ggcorrplot(show.diag=FALSE, 
+             type="lower", 
+             lab=TRUE, lab_size=2,
+             sig.level = 0.05, insig = c("pch", "blank"),
+             digits = 2)
+```
+
+```{r, eval=FALSE}
+# method 2
+library(tidyverse)
+#install.packages("lsr")
+library(lsr)
+# function to get chi square p value and Cramers V
+f = function(x,y) {
+    tbl = ebike %>% select(x,y) %>% table()
+    chisq_pval = round(chisq.test(tbl)$p.value, 2)
+    cramV = round(cramersV(tbl), 2) 
+    data.frame(x, y, chisq_pval, cramV) }
+
+# create unique combinations of column names
+# sorting will help getting a better plot (upper triangular)
+df_comb = data.frame(t(combn(sort(names(ebike)), 2)), stringsAsFactors = F)
+
+# apply function to each variable combination
+df_res = map2_df(df_comb$X1, df_comb$X2, f)
+
+# plot results
+df_res %>%
+  ggplot(aes(x,y,fill=chisq_pval))+
+  geom_tile()+
+  geom_text(aes(x,y,label=cramV))+
+  scale_fill_gradient(low="yellow", high="grey")+
+  theme_classic()
+```
+
+### Data imputation
+
+```{r}
+#impuptation recipe
+data_recipe_or <- recipe(injury_level ~ . , data = ebike) %>%
+  step_impute_bag(i_type , incident_with , personal_involvement, trip_purpose, regular_cyclist , helmet , road_conditions , sightlines , cars_on_roadside , bike_lights , terrain , bicycle_type , direction , turning , age , gender)
+```
+
+```{r,eval=FALSE}
+#https://cran.r-project.org/web/packages/caret/vignettes/caret.html
+library(tidymodels)
+library(dplyr)
+
+#impute for ebike
+ebike_imputed <- 
+  prep(data_recipe_or) %>% bake(new_data = ebike)
+#vis_miss(ebike_imputed)
+```
+
+```{r,eval=FALSE}
+summary(ebike_imputed)
+
+# lump all level less than 20 (5% of the dataset)
+ebike_imputed_lump <- ebike_imputed %>% 
+  mutate(i_type = fct_collapse(i_type,
+                               collison = c("Collision with moving object or vehicle","Collision with stationary object or vehicle"),
+                               fall="Fall",
+                               near=c("Near collision with moving object or vehicle","Near collision with stationary object or vehicle"))) %>% 
+  mutate(incident_with = fct_lump_prop(incident_with, prop = 0.1)) %>%
+  #pedestrian =10, bicylist = 12, other = 37... so lump together
+  mutate(trip_purpose = fct_lump_prop(trip_purpose, prop = 0.05)) %>%
+  #drop regular cyclist only 8 No
+  select(-c("regular_cyclist","bicycle_type")) %>% 
+  #lump social reason and during work 
+  mutate(road_conditions = fct_lump_prop(road_conditions, prop = 0.05)) %>%
+  #lump glare or reflection and obstructuion on road
+  mutate(sightlines = fct_lump_prop(sightlines, prop = 0.05)) %>% 
+  #lump B and F
+  mutate(bike_lights = fct_lump_prop(bike_lights, prop = 0.05)) %>% 
+  #lump direction
+  mutate(direction = fct_lump_prop(direction, prop = 0.05)) %>% 
+  #drop empty level
+  mutate(across(where(is.factor), ~fct_drop(.))) %>% 
+  #reorder factor level by frequency (start with most frequent)
+  mutate_if(is.factor,~fct_infreq(.))
+  
+summary(ebike_imputed_lump)
+summary(ebike_imputed)
+save(ebike_imputed_lump, file="20231203_ebikeimputedlump.rda")
+```
+
+```{r}
+load("20231203_ebikeimputedlump.rda")
+```
+
+### Model
+
+```{r}
+#install.packages("broom.mixed")
+library(MASS)
+model_ebike <- polr(injury_level ~ .,data=ebike_imputed_lump, Hess=TRUE)
+summary(model_ebike)
+
+library(car)
+Anova(model_ebike)
+
+# library(jtools)
+# library(broom.mixed)
+plot_summs(model_ebike)
+```
+
+```{r}
+## store model results
+ctable <- coef(summary(model_ebike))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+## combined table
+(table <- cbind(exp(ctable[,1]), "p value" = p))
+```
+
+## Regular bike
+
+### EDA
+
+```{r}
+summary(regular)
+
+# information in p_type is included in i_type so drop p_type
+ggplot(regular,aes(x=p_type,fill=i_type)) +
+  geom_bar(position="fill")
+
+# bicycle type
+ggplot(regular,aes(x=bicycle_type,fill=injury_level)) +
+  geom_bar(position="fill")
+
+# incident with 
+ggplot(regular,aes(x=incident_with,fill=injury_level)) +
+  geom_bar(position="fill")
+
+# gender
+ggplot(regular,aes(x=gender,fill=injury_level)) +
+  geom_bar(position="fill")
+
+# age
+ggplot(regular,aes(x=injury_level,y=age)) +
+  geom_boxplot()
+```
+
+### Data manipulation
+
+```{r}
+regular <- regular %>% 
+    select(-p_type)
+
+summary(regular_imputed)
+```
+
+### Test colinearity
+
+```{r,eval=FALSE}
+# method 1
+lookup_vec <- setNames(names(regular),
+                       paste0("Q", seq_along(regular)))
+regular_cor <- regular %>% 
+  rename(any_of(lookup_vec))
+
+library(ggcorrplot)
+model.matrix(~0+., data=regular_cor[1:5]) %>% 
+  cor(use="pairwise.complete.obs") %>% 
+  ggcorrplot(show.diag=FALSE, 
+             type="lower", 
+             lab=TRUE, lab_size=2,
+             sig.level = 0.05, insig = c("pch", "blank"),
+             digits = 2)
+```
+
+```{r,eval=FALSE}
+# method 2
+library(tidyverse)
+#install.packages("lsr")
+library(lsr)
+# function to get chi square p value and Cramers V
+f = function(x,y) {
+    tbl = regular %>% select(x,y) %>% table()
+    chisq_pval = round(chisq.test(tbl)$p.value, 2)
+    cramV = round(cramersV(tbl), 2) 
+    data.frame(x, y, chisq_pval, cramV) }
+
+# create unique combinations of column names
+# sorting will help getting a better plot (upper triangular)
+df_comb = data.frame(t(combn(sort(names(ebike_imputed)), 2)), stringsAsFactors = F)
+
+# apply function to each variable combination
+df_res = map2_df(df_comb$X1, df_comb$X2, f)
+
+# plot results
+df_res %>%
+  ggplot(aes(x,y,fill=chisq_pval))+
+  geom_tile()+
+  geom_text(aes(x,y,label=cramV))+
+  scale_fill_gradient(low="yellow", high="grey")+
+  theme_classic()
+```
+
+### Data imputation
+
+```{r}
+#imputation recipe
+data_recipe_rb <- recipe(injury_level ~ . , data = regular) %>%
+  step_impute_bag(i_type , incident_with , personal_involvement, trip_purpose, regular_cyclist , helmet , road_conditions , sightlines , cars_on_roadside , bike_lights , terrain , bicycle_type , direction , turning , age , gender)
+
+
+```
+
+```{r,eval=FALSE}
+#https://cran.r-project.org/web/packages/caret/vignettes/caret.html
+library(tidymodels)
+library(dplyr)
+
+#impute for ebike
+regular_imputed <- 
+  prep(data_recipe_rb) %>% bake(new_data = regular)
+#vis_miss(ebike_imputed)
+
+save(regular_imputed, file="20231202_regularimputed.rda")
+```
+
+```{r}
+load("20231202_regularimputed.rda")
+```
+
+### Model
+
+```{r}
+#install.packages("broom.mixed")
+library(MASS)
+model_regular <- polr(injury_level ~ .,data=regular_imputed, Hess=TRUE)
+summary(model_regular)
+
+library(car)
+Anova(model_regular)
+
+# library(jtools)
+# library(broom.mixed)
+# plot_summs(model_ebike)
+```
+
+```{r}
+## store model results
+ctable <- coef(summary(model_regular))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+## combined table
+(table <- cbind(exp(ctable[,1]), "p value" = p))
+
+
+```
+
+### Visualization
+
+```{r}
+library(jtools)
+#install.packages("broom.mixed")
+library(broom.mixed)
+plot_summs(model_regular)
+
+ggplot(regular_imputed,aes(x=direction)) +
+  geom_bar(stat = "count") + 
+  stat_count(geom = "text", colour = "white", size = 3.5,
+  aes(label = ..count..),position=position_stack(vjust=0.5))
+```
+
+```{r}
+write_csv(regular_imputed,"example.csv")
+```

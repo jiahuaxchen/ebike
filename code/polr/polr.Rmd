@@ -31,14 +31,28 @@ data <- data %>%
 #install.packages("naniar")
 library(naniar)
 
+data1 <- data %>%
+  #drop column that are not related to injury prediction
+  dplyr::select(-c(date,details,impact,pk,direction,x,y)) 
+
 data <- data %>%
   #drop column that are not related to injury prediction
   dplyr::select(-c(date,details,impact,pk,direction,x,y)) %>%
   #drop all column with more than 50% missing
-  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50) %>% 
+  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50) %>%
   filter(personal_involvement != "No")
 
 vis_miss(data) 
+
+
+```
+
+### Speed
+
+```{r}
+# data %>% 
+#   filter(!is.na(ebike_speed)) %>% 
+#   ggplot(aes(ebike_speed,fill=injury)) + geom_histogram(stat="count")
 ```
 
 ### Calculate age at report
@@ -192,16 +206,50 @@ all_imputed <- all_imputed %>%
 
 model_logi <- glm(injury_bin ~.-injury_level, data = all_imputed, family = "binomial")
 
+library(jtools)
+library(broom.mixed)
 plot_summs(model_logi)
+library(car)
 Anova(model_logi)
+## store model results
+ctable <- coef(summary(model_ebike))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+## combined table
+(table <- cbind(exp(ctable[,1]), "p value" = p))
 
+```
+
+```{r}
 model_logi.1 <- update(model_logi,.~.-i_type)
 Anova(model_logi.1)
+```
 
+```{r}
 ## add interaction
 model_logi_int <- update(model_logi,.~. + terrain * ebike + age_imp * ebike + gender * ebike)
 Anova(model_logi_int)
 plot_summs(model_logi_int)
+
+## store model results
+ctable <- coef(summary(model_logi_int))
+## calculate and store p values
+p <- pnorm(abs(ctable[, "z value"]), lower.tail = FALSE) * 2
+## combined table
+(table <- cbind(exp(ctable[,1]), "p value" = p))
+```
+
+#### Interpretation
+
+```{r}
+library(modelsummary)
+all_imputed$injury_bin <- recode_factor(all_imputed$injury_bin,  "FALSE" = "No injury",  "TRUE" = "Injury")
+levels(all_imputed$injury_bin)
+datasummary(ebike*gender ~ injury_bin,fmt=0,data=all_imputed)
+datasummary_crosstab(ebike*gender ~ injury_bin,statistic = . ~ Percent("col"),fmt=0,data=all_imputed, )
+
+ggplot(all_imputed,aes(x=gender,fill=injury_bin)) +
+  geom_bar(position="fill") 
 ```
 
 ### Polr model

@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #install.packages("tidytext")
 #install.packages("textdata")
 #install.packages("wordcloud")
+library(tidyverse)
 library(textdata)
 library(tidytext)
 library(dplyr)
@@ -17,9 +18,9 @@ library(ggplot2)
 ```
 
 ```{r}
-Canada <- readxl::read_excel("code/data/Canada.xlsx")
+Canada <- readxl::read_excel("../data/Canada.xlsx")
 Canada$country <- "Canada"
-US <- readxl::read_excel("code/data/United States.xlsx")
+US <- readxl::read_excel("../data/United States.xlsx")
 US$country <- "US"
 df <- rbind(Canada,US)
 ```
@@ -58,10 +59,10 @@ tidy_ebike <- df %>%
   dplyr::filter(report_date > as.Date('2016-11-30')) %>% 
   select(details) %>% 
   unnest_tokens(word, details) %>%
-  anti_join(stop_words) %>% 
-  count(word, sort = TRUE) 
+  anti_join(stop_words) 
 
 tidy_ebike %>%
+  count(word, sort = TRUE) %>% 
   filter(n > 50) %>%
   mutate(word = reorder(word, n)) %>%
   ggplot(aes(n, word)) +
@@ -77,10 +78,11 @@ tidy_pedal <- df %>%
   filter(ebike=="No") %>% 
   select(details) %>% 
   unnest_tokens(word, details) %>%
-  anti_join(stop_words) %>% 
-  count(word, sort = TRUE) 
+  anti_join(stop_words) 
+  
 
 tidy_pedal %>%
+  count(word, sort = TRUE) %>% 
   filter(n > 50) %>%
   mutate(word = reorder(word, n)) %>%
   ggplot(aes(n, word)) +
@@ -119,6 +121,17 @@ ggplot(frequency, aes(x = pedal, y = ebike)) +
                        low = "darkslategray4", high = "gray75") +
   theme(legend.position="none") +
   labs(y = "Ebike", x = "Pedal")
+```
+
+### Speed
+
+```{r}
+accelerate <- frequency %>% 
+  filter(str_detect(word,"accele"))
+speed <-frequency %>% 
+  filter(str_detect(word,"speed"))
+abrupt <- frequency %>% 
+  filter(str_detect(word,"abrupt"))
 ```
 
 ### Sentiment analysis

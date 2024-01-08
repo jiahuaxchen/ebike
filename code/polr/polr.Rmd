@@ -31,17 +31,6 @@ data <- data %>%
 #install.packages("naniar")
 library(naniar)
 
-data1 <- data %>%
-  #drop column that are not related to injury prediction
-  dplyr::select(-c(date,details,impact,pk,direction,x,y)) 
-
-data <- data %>%
-  #drop column that are not related to injury prediction
-  dplyr::select(-c(date,details,impact,pk,direction,x,y)) %>%
-  #drop all column with more than 50% missing
-  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50) %>%
-  filter(personal_involvement != "No")
-
 vis_miss(data) 
 
 
@@ -155,6 +144,14 @@ data3 <- data3 %>%
    mutate_if(is.factor,~fct_infreq(.))
 data3$injury_level <- factor(data3$injury_level, levels=c('A', 'B', 'C')) 
 summary(data3$injury_level)
+```
+```{r}
+data3 <- data3 %>%
+  #drop column that are not related to injury prediction
+  dplyr::select(-c(date,details,impact,pk,direction,x,y)) %>%
+  #drop all column with more than 50% missing
+  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50) %>%
+  filter(personal_involvement != "No")
 ```
 
 ```{r}

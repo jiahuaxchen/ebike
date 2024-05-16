@@ -1,0 +1,166 @@
+---
+title: "Ebike summary statistics"
+output: html_document
+date: "2024-04-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+## R Markdown
+```{r data}
+data <- rbind(readxl::read_excel("../data/20240425Canada.xlsx"),readxl::read_excel("../data/20240425United States.xlsx"))
+
+data <- data %>% 
+  dplyr::filter(date > as.Date('2016-11-30')) 
+```
+
+## Including Plots
+```{r}
+## Convert to date
+format(data_regroup$report_date)
+date <- as.Date(data_regroup$report_date[0:10],format="%Y-%m-%d")
+date_cut <- format(as.Date(date),"%Y-%m")
+
+## Tabulate
+table(cut(date, 'month'))
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+data_regroup %>% 
+  filter(ebike=="Yes") %>% 
+  mutate (report_date = as.Date(report_date, format="%Y-%m-%d")) %>% 
+  mutate (report_year = format(as.Date(report_date),"%Y")) %>% 
+  group_by(report_year) %>% 
+  ggplot(aes(x=report_year,fill=ebike)) +
+  geom_bar(position="fill")
+
+
+  ggplot(aes(report_year)) + geom_bar()
+  
+data_regroup %>% 
+  mutate (report_date = as.Date(report_date, format="%Y-%m-%d")) %>% 
+  mutate (report_year = format(as.Date(report_date),"%Y")) %>% 
+  group_by(report_year) %>% 
+  ggplot(aes(x=report_year,fill=ebike)) +
+  geom_bar(position="fill")
+
+countByMonth$report_month <- factor(countByMonth$report_month, levels = unique(countByMonth$report_month))
+
+data_regroup %>% 
+  mutate (report_date = as.Date(report_date, format="%Y-%m-%d")) %>% 
+  mutate (report_year = format(as.Date(report_date),"%Y")) %>% 
+  group_by(report_year) %>% 
+  ggplot(aes(x=report_year,fill=ebike)) +
+  geom_bar()
+
+
+```
+```{r p_type}
+data_regroup %>% 
+  ggplot(aes(x=i_type,fill=ebike)) +
+  geom_bar(position="fill") + 
+  #scale_fill_viridis (discrete = T) +
+  coord_flip() +
+  labs (title = "Report type by bike type ") 
+```
+
+
+```{r}
+data_regroup %>% 
+  mutate(age_group = factor(age_group,
+                            levels=c("0-12", "13-17",
+                                     "18-24","25-34",
+                                     "35-44","45-54",
+                                     "55-64","65-74",
+                                     "75+"))) %>%
+  filter (!is.na(age_group)) %>% 
+  ggplot(aes(x=ebike,fill=age_group)) +
+  geom_bar(position="fill") + 
+  #scale_fill_viridis (discrete = T) +
+  coord_flip() +
+  labs (title = "Percentage of report by age group")
+
+data_regroup %>% 
+  mutate(age_group = factor(age_group,
+                            levels=c("0-12", "13-17",
+                                     "18-24","25-34",
+                                     "35-44","45-54",
+                                     "55-64","65-74",
+                                     "75+"))) %>%
+  filter (!is.na(age_group)) %>% 
+  ggplot(aes(x=injury2,fill=age_group)) +
+  geom_bar(position="fill") + 
+  #scale_fill_viridis (discrete = T) +
+  coord_flip() +
+  labs (title = "Percentage of report by age group") +
+  facet_wrap(~ebike)
+```
+```{r}
+data_prep %>% 
+  filter (injury2 == "TRUE") %>%
+  ggplot(aes(x=ebike,y=age_imp)) + 
+  geom_boxplot()
+
+data_prep %>% 
+  filter (injury2 == "TRUE") %>% 
+  group_by(ebike) %>% 
+  summarise(avg = mean(age_imp,na.rm = TRUE),
+            med = median(age_imp,na.rm = TRUE))
+
+data_prep %>% 
+  filter (injury2 != "TRUE") %>% 
+  group_by(ebike) %>% 
+  summarise(avg = mean(age_imp,na.rm = TRUE),
+            med = median(age_imp,na.rm = TRUE))
+
+data_regroup %>% 
+  group_by(ebike) %>% 
+  summarise(avg = mean(age_imp,na.rm = TRUE),
+            med = median(age_imp,na.rm = TRUE))
+
+```
+
+```{r injury level}
+data_regroup %>% 
+  ggplot(aes(x=ebike,fill=injury2)) +
+  geom_bar(position="fill") + 
+  #scale_fill_viridis (discrete = T) +
+  coord_flip() +
+  labs (title = "Injury level by bike type")
+```
+
+```{r gender}
+data_regroup %>% 
+  filter (personal_involvement == "Yes") %>% 
+  filter (gender == "F" | gender =="M") %>% 
+  ggplot(aes(x=ebike,fill=injury2)) +
+  geom_bar(position="fill") + 
+  #scale_fill_viridis (discrete = T) +
+  coord_flip() +
+  labs (title = "Injury level by bike type * gender") +
+  facet_wrap(~gender)
+
+data_regroup %>% 
+  filter (gender == "F" | gender =="M") %>% 
+  ggplot(aes(x=ebike,fill=gender)) +
+  geom_bar(position="fill") + 
+  #scale_fill_viridis (discrete = T) +
+  coord_flip() +
+  labs (title = "Report by bike type * gender") 
+
+data_regroup %>% 
+  filter (gender == "F" | gender =="M") %>% 
+  ggplot(aes(x=ebike,fill=gender)) +
+  geom_bar(position="fill") + 
+  #scale_fill_viridis (discrete = T) +
+  coord_flip() +
+  labs (title = "Report by bike type * gender") +
+  facet_wrap(~personal_involvement)
+```
+

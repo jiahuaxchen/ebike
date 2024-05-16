@@ -31,10 +31,9 @@ data <- data %>%
 #install.packages("naniar")
 library(naniar)
 
-vis_miss(data) 
-
-
+vis_miss(data)
 ```
+
 
 ### Speed
 

@@ -1,0 +1,579 @@
+---
+title: "Population"
+output: html_document
+date: "2024-04-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("sf")
+#install.packages("tidyverse")
+#install.packages("tigris")
+#nstall.packages("tidycensus")
+#install.packages("USA.state.boundaries")
+library(sf)
+library(tidyverse)
+library(tigris)
+library(tidycensus)
+library(USA.state.boundaries)
+
+```
+
+## Read Data
+
+```{r data}
+Canada <- readxl::read_excel("../data/20240425Canada.xlsx")
+US <- readxl::read_excel("../data/20240425United States.xlsx")
+Canada <- Canada %>% 
+  dplyr::filter(date > as.Date('2016-11-30')) 
+US <- US %>% 
+  dplyr::filter(date > as.Date('2016-11-30'))
+```
+
+
+```{r data}
+data <- rbind(readxl::read_excel("../data/20240425Canada.xlsx"),readxl::read_excel("../data/20240425United States.xlsx"))
+data <- data %>% 
+  dplyr::filter(date > as.Date('2016-11-30'))
+```
+
+
+```{r data}
+# missing data
+#install.packages("naniar")
+library(naniar)
+vis_miss(data)
+```
+
+## Project data
+```{r}
+# turn BikeMap data into 
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+data_sf <- st_as_sf(x = data,                         
+           coords = c("x", "y"),
+           crs = projcrs)
+```
+
+## Summary
+```{r}
+#install.packages("spData")
+install.packages("canadianmaps")
+library(spData)
+library(canadianmaps)
+
+# see how many fall in US OR Canada
+# Transform CRS if they do not match
+if (st_crs(zero_pop_crashes) != st_crs(us_states)) {
+    zero_pop_crashes <- st_transform(zero_pop_crashes, crs = st_crs(us_states))
+}
+# Perform spatial join
+intersections <- st_intersects(zero_pop_crashes, us_states)
+# Count points within any U.S. state
+num_points_in_us <- sum(sapply(intersections, any))
+print(num_points_in_us)
+
+
+#canada
+if (st_crs(zero_pop_crashes) != st_crs(REG)) {
+    zero_pop_crashes <- st_transform(zero_pop_crashes, crs = st_crs(REG))
+}
+sf_use_s2(FALSE)
+intersections_can <- st_intersects(zero_pop_crashes, REG)
+
+# Count points within any Canada
+num_points_in_can <- sum(sapply(intersections_can, any))
+print(intersections_can)
+
+# zero points
+
+```
+
+##All blocks
+### USA
+```{r}
+census_api_key("f66d60e3dba0f71ea1155716f84a314391139d8f", install = TRUE)
+options(tigris_use_cache = TRUE)
+```
+
+```{r}
+options(tigris_cache_dir = "code")
+```
+```{r}
+p1_2020 <- load_variables(2020, "pl", cache = TRUE)
+View(p1_2020)
+```
+
+```{r}
+states <- state.abb  # Built-in R dataset containing state abbreviations
+
+#remove states that has no bike incident reports
+updated_states <- states[!states %in% c("ME", "MS","NH","ND","OK","WY","NY")]
+
+```
+
+```{r}
+state <- "NY"  # Example with New York
+
+blocks_data <- get_decennial(
+  geography = "block",
+  variables = "P1_001N",
+  year = 2020,
+  state = state,
+  geometry = TRUE
+)
+
+if (exists("blocks_data")) {
+  saveRDS(blocks_data, file = paste0(getwd(), "/RDA/blocks_data_", state, ".rds"))
+  print(paste("Data saved for", state))
+} else {
+  print(paste("No data retrieved for", state))
+}
+```
+
+```{r}
+# for all states
+
+for (state in states) {
+  print(paste("Processing:", state))
+  # Attempt to download block data for each state
+  blocks_data <- get_decennial(
+    geography = "block",
+    variables = "P1_001N",  # Total population
+    year = 2020,
+    state = state,
+    geometry = TRUE
+  )
+  if (exists("blocks_data")) {
+    saveRDS(blocks_data, file = paste0(getwd(), "/RDA/blocks_data_", state, ".rds"))
+    print(paste("Data saved for", state))
+  } else {
+    print(paste("No data retrieved for", state))
+  }
+}
+```
+
+
+
+```{r example}
+# Align projection
+x <- data_sf
+y <- blocks_data_AK
+if (st_crs(x) != st_crs(y)){
+  x <- st_transform(x, crs = st_crs(y))
+}
+
+#time intersection
+start.time <- Sys.time()
+
+data_sf_AK <- st_join(x, left = FALSE, y["value"])
+
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+```
+
+
+```{r}
+library(sf)
+library(dplyr)
+
+results <- list()
+
+for (state in updated_states) {
+  file_name <- paste0(getwd(), "/RDA/blocks_data_", state, ".rds")
+  blocks_data <- readRDS(file_name)
+  
+  if (st_crs(data_sf) != st_crs(blocks_data)) {
+    data_sf <- st_transform(data_sf, crs = st_crs(blocks_data))
+  }
+  joined_data <- st_join(data_sf, left = FALSE, blocks_data["value"])
+
+  results[[state]] <- joined_data
+  cat(state, "processing completed \n")
+}
+
+# Optional: Save all results or handle them as needed
+saveRDS(results, "US_bike_pop.rds")
+
+```
+
+```{r}
+library(data.table)
+
+# drop states with 0 rows
+filtered_list <- Filter(function(df) nrow(df) > 0, US_bike_pop)
+
+# Assuming 'results' is your list of data frames or sf data frames
+all_US <- rbindlist(filtered_list, use.names = TRUE, fill = TRUE)
+
+# If the result needs to be an sf object and it's not already
+if (!inherits(all_data, "sf") && any(names(all_data) %in% "geometry")) {
+  library(sf)
+  all_data <- st_as_sf(all_data)
+}
+
+# This single block does everything from combining the data frames using rbindlist(),
+# which automatically aligns columns and fills missing ones with NA (if any),
+# to checking and converting the combined data into an sf object if required.
+# It ensures the operation is efficient and the data structure is correctly maintained.
+
+```
+
+```{r}
+saveRDS(all_US, "US_incidentswithPop.rds")
+
+```
+```{r}
+load("US_incidentswithPop.rds")
+all_US <- st_as_sf(all_US)
+```
+###Canada
+
+```{r}
+Canada_DB <- st_read("../data/CanadaPop/ldb_000b21a_e/ldb_000b21a_e.shp")
+
+Canada_pop <- read_csv("../data/CanadaPop/Canpop.csv")
+
+Canada_DB_rename <- Canada_DB %>% 
+  mutate(DBUID = as.numeric(DBUID))%>% 
+  rename(DBUID_IDIDU = DBUID)
+
+Canada_DB_pop <- Canada_DB_rename %>%
+  left_join(Canada_pop, by = "DBUID_IDIDU")
+
+```
+
+```{r example}
+# Align projection
+x <- data_sf
+y <- Canada_DB_pop
+if (st_crs(x) != st_crs(y)){
+  x <- st_transform(x, crs = st_crs(y))
+}
+
+#time intersection
+start.time <- Sys.time()
+
+all_Canada <- st_join(x, left = FALSE, y["DBPOP2021_IDPOP2021"])
+
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+st_write(all_Canada, "../data/derive/all_bike_Ca_pop_0425.shp",
+         append=FALSE)
+
+```
+### Bind
+```{r}
+all_US <- all_US %>% 
+  rename(pop = value)
+all_Canada <- all_Canada %>%
+  rename(pop = DBPOP2021_IDPOP2021)
+
+```
+
+```{r}
+
+# Align projection
+x <- all_US
+y <- all_Canada
+if (st_crs(x) != st_crs(y)){
+  x <- st_transform(x, crs = st_crs(y))
+}
+
+all_bike_pop <- rbind(x,y)
+
+write.csv(all_bike_pop, "../data/derive/all_bike_pop_0425.csv", row.names = FALSE, quote = TRUE, fileEncoding = "UTF-8")
+
+st_write(all_bike_pop, "../data/derive/all_bike_pop_0425.shp",
+         append=FALSE)
+
+```
+
+### visualization
+```{r}
+# get USA states, filter out Puerto Rico, Alaska, and Hawaii for now
+# load the map
+data(state_boundaries_wgs84)
+all_bike_pop_sf <- st_as_sf(all_bike_pop)
+all_bike_pop_sf <- st_transform(all_bike_pop_sf, 4326)
+st_crs(all_bike_pop_sf)
+
+if (st_crs(all_bike_pop_sf) != st_crs(us_states)) {
+    us_states <- st_transform(us_states, crs = st_crs(all_bike_pop_sf))
+}
+
+# plotting with ggplot2
+# Base plot with state boundaries
+
+
+buffered_block <- st_buffer(block,dist=9E-6)
+
+ggplot() +
+  #geom_sf(data = state_boundaries_wgs84, fill = "white", color = "black") +
+  #geom_sf(data = combined_zero_pop_with_geoid, color = "red") +
+  #geom_sf(data = all_Canada, color = "red") +
+  geom_sf(data = buffered_block) +
+  geom_sf(data = block, color = "red") +
+  #ggtitle("State Boundaries with Points") +
+  theme_minimal()
+
+
+```
+## Zero population blocks
+
+```{r}
+# for zero population, impute the population from adjacent blocks by taking the mean value
+#install.packages("spdep")
+library(spdep)
+
+all_bike_pop_sf <- st_read("../data/derive/all_bike_pop_0425.shp")
+
+zero_pop_crashes <- all_bike_pop_sf %>%
+  filter(pop == 0)
+```
+
+###US
+```{r}
+# Initialize an empty list to store the GEOID info for zero_pop points
+zero_pop_with_geoid <- list()
+
+#remove states that has no zero population
+updated_states_zero <- states[!states %in% c("AL", "CT","DE","DC","FL","IA","KS","KY","LA","ME","MI","MS","NH","NJ","NM","NY","ND","OK","RI","SD","VA","WV","WY")]
+
+for (state in updated_states_zero) {
+  # Load state blocks data
+  file_name <- paste0(getwd(), "/RDA/blocks_data_", state, ".rds")
+  blocks_data <- readRDS(file_name)
+
+  # Ensure CRS consistency
+  if (st_crs(zero_pop_crashes) != st_crs(blocks_data)) {
+    zero_pop_crashes <- st_transform(zero_pop_crashes, crs = st_crs(blocks_data))
+  }
+
+  # Perform the spatial join to get the GEOID
+  zero_pop_joined <- st_join(zero_pop_crashes, blocks_data, left = FALSE)
+
+  # Store the result in the list
+  zero_pop_with_geoid[[state]] <- zero_pop_joined
+
+  # Output progress
+  cat(state, "processing completed for zero population join\n")
+}
+```
+
+```{r}
+library(purrr)
+# Combine the results into a single data frame
+combined_zero_pop_with_geoid <- map2_dfr(zero_pop_with_geoid, names(zero_pop_with_geoid), ~ mutate(.x, state = .y))
+
+combined_zero_pop_with_geoid <- st_as_sf(combined_zero_pop_with_geoid)
+
+```
+
+```{r echo=FALSE}
+# Initialize an empty list to store neighboring blocks information
+neighbor_blocks_info <- list()
+
+for (state in updated_states_zero) {
+  # Load state blocks data
+  file_name <- paste0(getwd(), "/RDA/blocks_data_", state, ".rds")
+  blocks_data <- readRDS(file_name)
+  
+  # Subset blocks that contain zero-population points for the current state
+  zero_pop_geoids <- combined_zero_pop_with_geoid %>%
+    filter(state == !!state) %>%
+    pull(GEOID)
+  
+  # Extract the common prefix for GEOID (assuming state and county level, first 5 characters)
+  common_prefixes <- unique(substr(zero_pop_geoids, 1, 5))
+  
+  # Filter blocks_data to the relevant subset based on common prefixes
+  blocks_data_subset <- blocks_data %>%
+    filter(substr(GEOID, 1, 5) %in% common_prefixes)
+  
+  # Subset blocks that contain zero-population points
+  zero_pop_blocks <- blocks_data_subset %>%
+    filter(GEOID %in% zero_pop_geoids)
+  
+  # Ensure CRS consistency
+  if (st_crs(zero_pop_blocks) != st_crs(blocks_data_subset)) {
+    zero_pop_blocks <- st_transform(zero_pop_blocks, crs = st_crs(blocks_data_subset))
+  }
+
+  # Initialize an empty list to store the neighbors for the current state
+  state_neighbors <- list()
+  
+  # Loop through each zero-population block
+  for (i in seq_len(nrow(zero_pop_blocks))) {
+    block <- zero_pop_blocks[i, ]
+    
+    # Create a 1-meter (in degree) buffer around the block
+    buffered_block <- st_buffer(block, dist = 9E-6)
+    
+    # Intersect the buffered block with blocks to get neighboring blocks
+    neighbors <- st_intersection(buffered_block, blocks_data_subset)
+    
+    # Keep relevant columns: GEOID of zero-pop blocks and populations of neighboring blocks
+    neighbors_info <- neighbors %>%
+      st_drop_geometry() %>%
+      select(zero_pop_GEOID = GEOID, neighbor_GEOID = GEOID.1, population = value.1) %>%
+      filter(zero_pop_GEOID != neighbor_GEOID)  # Exclude self-intersection
+    
+    # Store the result in the list
+    state_neighbors[[i]] <- neighbors_info
+  }
+
+  # Combine the neighbors for the current state
+  neighbor_blocks_info[[state]] <- do.call(rbind, state_neighbors)
+
+  # Output progress
+  cat(state, "neighbor intersection and buffering completed\n")
+}
+
+# Combine the neighbor blocks information into a single data frame
+combined_neighbor_info <- do.call(rbind, neighbor_blocks_info)
+
+saveRDS(combined_neighbor_info,"../data/derive/combined_neighbor_info.rds")
+
+```
+
+```{r}
+# Calculate mean population for each zero-population block based on neighboring blocks
+mean_populations <- combined_neighbor_info %>%
+  group_by(zero_pop_GEOID) %>%
+  summarize(avg_population = mean(population, na.rm = TRUE))
+```
+
+
+```{r}
+# Merge the average population with zero-population crashes
+combined_zero_pop <- combined_zero_pop_with_geoid %>%
+  left_join(mean_populations, by = c("GEOID" = "zero_pop_GEOID")) %>% 
+  mutate(pop = ifelse(is.na(avg_population), pop, avg_population)) %>%
+  select(-avg_population)
+
+
+# Save the combined results
+saveRDS(combined_zero_pop, "../data/derive/zero_point_imputed.rds")
+
+```
+
+### Canada
+```{r}
+# find the DBUID of zero population blocks
+Canada_zero_DBUID <- st_join(zero_pop_crashes, left = FALSE, Canada_DB_pop["DBUID_IDIDU"])
+```
+
+
+```{r}
+# buffer the block to find neighboring blocks
+# Subset blocks that contain zero-population points for the current state
+zero_pop_geoids <- Canada_zero_DBUID %>%
+  pull(DBUID_IDIDU)
+
+# Extract the common prefix for GEOID (assuming state and county level, first 8 characters)
+common_prefixes <- unique(substr(zero_pop_geoids, 1, 8))
+
+# Filter blocks_data to the relevant subset based on common prefixes
+blocks_data_subset <- Canada_DB_pop %>%
+  filter(substr(DBUID_IDIDU, 1, 8) %in% common_prefixes)
+
+# Subset blocks that contain zero-population points
+zero_pop_blocks <- blocks_data_subset %>%
+  filter(DBUID_IDIDU %in% zero_pop_geoids)
+
+# Ensure CRS consistency
+if (st_crs(zero_pop_blocks) != st_crs(blocks_data_subset)) {
+  zero_pop_blocks <- st_transform(zero_pop_blocks, crs = st_crs(blocks_data_subset))
+}
+
+# Initialize an empty list to store the neighbors for the current state
+state_neighbors <- list()
+
+# Loop through each zero-population block
+for (i in seq_len(nrow(zero_pop_blocks))) {
+  block <- zero_pop_blocks[i, ]
+  
+  # Create a 1-meter (in degree) buffer around the block
+  buffered_block <- st_buffer(block, dist = 9E-6)
+  
+  # Intersect the buffered block with blocks to get neighboring blocks
+  neighbors <- st_intersection(buffered_block, blocks_data_subset)
+  
+  # Keep relevant columns: GEOID of zero-pop blocks and populations of neighboring blocks
+  neighbors_info <- neighbors %>%
+    st_drop_geometry() %>%
+    select(zero_pop_DBUID = DBUID_IDIDU, neighbor_DBUID = DBUID_IDIDU.1, population = DBPOP2021_IDPOP2021.1) %>%
+    filter(zero_pop_DBUID != neighbor_DBUID)  # Exclude self-intersection
+  
+  # Store the result in the list
+  state_neighbors[[i]] <- neighbors_info
+}
+
+# Combine the neighbor blocks information into a single data frame
+combined_neighbor_info <- do.call(rbind, state_neighbors)
+
+saveRDS(combined_neighbor_info,"../data/derive/combined_neighbor_info_Canada.rds")
+
+```
+
+```{r}
+# Calculate mean population for each zero-population block based on neighboring blocks
+mean_populations <- combined_neighbor_info %>%
+  group_by(zero_pop_DBUID) %>%
+  summarize(avg_population = mean(population, na.rm = TRUE))
+
+```
+
+```{r}
+# Calculate mean population for each zero-population block based on neighboring blocks
+mean_populations <- combined_neighbor_info %>%
+  group_by(zero_pop_GEOID) %>%
+  summarize(avg_population = mean(population, na.rm = TRUE))
+```
+
+
+```{r}
+
+# Merge the average population with zero-population crashes
+combined_zero_pop <- Canada_zero_DBUID %>%
+  left_join(mean_populations, by = c("DBUID_IDIDU" = "zero_pop_DBUID")) %>% 
+  mutate(pop = ifelse(is.na(avg_population), pop, avg_population)) %>%
+  select(-avg_population)
+
+
+# Save the combined results
+saveRDS(zero_point_imputed, "../data/derive/zero_point_imputed_US.rds")
+saveRDS(combined_zero_pop, "../data/derive/zero_point_imputed_Ca.rds")
+
+```
+
+###Bind
+```{r}
+US_zero_pop <- zero_point_imputed
+Canada_zero_pop <- combined_zero_pop 
+
+# Merge the average population with zero-population crashes
+all_bike_pop <- read.csv("../data/derive/all_bike_pop_0425.csv")
+
+# Merge with US
+all_bike_final <- all_bike_pop %>%
+  left_join(US_zero_pop %>% 
+              select(rprt_dt, pop), by = c("report_date" = "rprt_dt")) %>% 
+  mutate(pop.x = ifelse(is.na(pop.y), pop.x, pop.y)) %>%
+  select(-pop.y,geometry.y)
+
+# Merge with Canada
+all_bike_final_1 <- all_bike_final %>%
+  left_join(Canada_zero_pop %>% 
+              select(rprt_dt, pop), by = c("report_date" = "rprt_dt")) %>% 
+  mutate(pop.x = ifelse(is.na(pop), pop.x, pop)) %>%
+  select(-pop,geometry) %>% 
+  st_drop_geometry()
+
+saveRDS(all_bike_final_1, "../data/derive/all_bike_imputed_US.rds")
+```
+

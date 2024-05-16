@@ -1,0 +1,192 @@
+---
+title: "Binary logistics"
+output: html_document
+date: "2024-04-26"
+---
+
+```{r}
+
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE)
+library(tidyverse)
+library(tidymodels)
+tidymodels_prefer()
+```
+##
+```{r}
+# read data with population imputation 
+data <- readRDS("../data/derive/all_bike_imputed_US.rds")
+```
+
+## Clean data
+
+```{r clean, echo=FALSE}
+source("calculate_age.R")
+source("regroup_level.R")
+
+```
+
+```{r}
+data_age <- calculate_age(data)
+data_regroup <- regroup(data_age)
+```
+
+```{r}
+vis_miss(data_regroup)
+```
+
+```{r}
+data_prep <- data_regroup %>%
+  filter(personal_involvement != "No") %>% 
+  #drop column that are not related to injury prediction
+  dplyr::select(-c(index,injury,injury3,report_date,personal_involvement,p_type,age,geometry,birthmonth,infrastructure_changed,age_group,date,details,impact,pk,direction,geometry.x,geometry.y,X)) %>%
+  rename (pop = pop.x) %>% 
+  #drop all column with more than 50% missing
+  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50)
+
+vis_miss(data_prep)
+  
+```
+
+##Imputation
+```{r}
+#  impute for ebike variable (ditched)
+# data_recipe_ebike <- recipe(injury2 ~ . , data = data_prep) %>%
+#     step_impute_bag(ebike)
+#   
+# ebike_imputed <- prep(data_recipe_ebike) %>% 
+#   bake(new_data = data_prep)
+#   
+# summary(all_imputed$ebike)
+```
+
+```{r}
+source("imputation.r")
+#  subset ebike and drop unused level
+ebike <- data_prep %>% 
+  filter(ebike=="Yes") %>% 
+  mutate(pop = ifelse(pop == 0, 1, pop)) %>% 
+  mutate(across(where(is.factor), ~fct_drop(.))) %>% 
+  select (-ebike)
+
+ebike_imputed <- impute(ebike)
+  
+vis_miss(ebike_imputed)
+```
+
+```{r}
+pedal <- data_prep %>% 
+  filter(ebike=="No") %>% 
+  mutate(pop = ifelse(pop == 0, 1, pop)) %>% 
+  mutate(across(where(is.factor), ~fct_drop(.))) %>% 
+  select (-ebike)
+
+pedal_imputed <- impute(pedal)
+```
+
+## exploratory
+```{r}
+q <- ggplot(ebike_imputed, aes(x=bicycle_type, fill=injury2))
+q + geom_bar(position="fill") + 
+  #scale_fill_viridis(discrete = T) +
+  coord_flip()
+```
+
+```{r}
+ggplot(data_age,aes(x=incident_with,fill=injury)) +
+  geom_bar(position="fill") +
+  #scale_fill_viridis(discrete = T) +
+  coord_flip()
+
+ggplot(data_prep,aes(x=injury2,y=pop)) +
+  geom_boxplot() 
+
+ggplot(data_prep,aes(x=pop)) +
+  geom_histogram(bins=300) 
+```
+
+## Binary regression
+```{r}
+#install.packages("rstanarm")
+library(rstanarm)
+ebike_model_itype <- stan_glm(injury2 ~ .,
+                        data=ebike_imputed,
+                        #offset = log(pop),
+                        family = binomial(link = "logit"),
+                        seed = 1208,
+                        refresh=0)
+
+summary(ebike_model_itype)
+```
+
+
+```{r}
+plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
+     pars = c(#"i_typecollison_fall", "incident_withbicyclist",
+              regular_cyclistN))
+plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
+     pars = c("regular_cyclistN"))
+
+plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
+     pars = c(#"i_typecollison_fall", "incident_withbicyclist",
+              "genderF"))
+plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
+     pars = c(#"i_typecollison_fall", "incident_withbicyclist",
+              "age_imp"))
+
+#round(posterior_interval(pedal_model, prob = 0.9), 2)
+```
+
+```{r}
+pedal_model <- stan_glm(injury2 ~ . - i_type,
+                        data=pedal_imputed,
+                        family = binomial(link = "logit"),
+                        #offset = log(pedal_imputed$pop),
+                        seed = 1208,
+                        refresh=0)
+
+pedal_model_itype <- stan_glm(injury2 ~ .,
+                        data=pedal_imputed,
+                        family = binomial(link = "logit"),
+                        #offset = log(pedal_imputed$pop),
+                        seed = 1208,
+                        refresh=0)
+
+summary(pedal_model)
+summary(pedal_model_itype)
+```
+
+
+```{r}
+pplot_P<-plot(pedal_model, "areas", prob = 0.95, prob_outer = 1)
+pplot_P + 
+  geom_vline(xintercept = 0) +
+  ggtitle("Pedal Bike Injury Factor")
+
+round(posterior_interval(pedal_model, prob = 0.9), 2)
+
+```
+
+```{r}
+ebike_freq <- glm(injury2 ~.-i_type, 
+data = ebike_imputed, family = "binomial")
+
+pedal_freq <- glm(injury2 ~.-i_type, 
+data = pedal_imputed, family = "binomial")
+
+pedal_freq_itype <- glm(injury2 ~., 
+data = pedal_imputed, family = "binomial")
+
+
+summary(pedal_freq_itype)
+summary(ebike_freq)
+summary(pedal_freq)
+
+saveRDS(ebike_model, file = "../output/model_result/ebike_baye.rds")
+saveRDS(pedal_model, file = "../output/model_result/pedal_baye.rds")
+
+```
+

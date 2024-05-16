@@ -38,9 +38,8 @@ vis_miss(data)
 ### Speed
 
 ```{r}
-# data %>% 
-#   filter(!is.na(ebike_speed)) %>% 
-#   ggplot(aes(ebike_speed,fill=injury)) + geom_histogram(stat="count")
+data3 %>%
+  ggplot(aes(injury_level,fill=ebike)) + geom_bar() + coord_flip()
 ```
 
 ### Calculate age at report
@@ -110,8 +109,7 @@ data3 <- data2 %>%
   mutate(injury_level = fct_collapse(injury,A=c("No injury"),
                                      B=c("Injury, no treatment"),
                                      C=c("Injury, hospitalized","Injury, saw family doctor","Injury, hospital emergency visit"),
-                                     Unknown=c("Unknown"),
-                                     level=c("A","B","C"))) %>% 
+                                     Unknown=c("Unknown"))) %>% 
   # lump incidents with vehicles
   mutate(incident_with = fct_collapse(incident_with, vehicle = 
                                         c("Vehicle, turning right",
@@ -140,17 +138,30 @@ data3 <- data3 %>%
 
 #reorder factor level by frequency (start with most frequent)
  data3 <- data3 %>%
+   mutate(injury_level = fct_collapse(injury_level,no=c("A"),
+                                     yes=c("B","C"),
+                                     Unknown=c("Unknown"),
+                                     level=c("no","yes"))) %>% 
    mutate_if(is.factor,~fct_infreq(.))
-data3$injury_level <- factor(data3$injury_level, levels=c('A', 'B', 'C')) 
+data3$injury_level <- factor(data3$injury_level, levels=c("no","yes")) 
 summary(data3$injury_level)
 ```
+
 ```{r}
-data3 <- data3 %>%
+# without witness cases
+data4 <- data3 %>%
   #drop column that are not related to injury prediction
   dplyr::select(-c(date,details,impact,pk,direction,x,y)) %>%
   #drop all column with more than 50% missing
   purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50) %>%
   filter(personal_involvement != "No")
+
+# with witness cases
+data5 <- data3 %>%
+  #drop column that are not related to injury prediction
+  dplyr::select(-c(date,details,impact,pk,direction,x,y)) %>%
+  #drop all column with more than 50% missing
+  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50)
 ```
 
 ```{r}
@@ -168,7 +179,35 @@ regular <- data3 %>%
 
 ## All bike
 
-### Data manipulation
+### With witness
+
+```{r}
+vis_miss(data5)
+```
+
+```{r}
+# removing variables that are not going to be used in the model
+# age_imp is the calculated one, so we will remove the original age and age-group
+# removing i_type, see ebike_step doc
+
+all_bike <- data5 %>% 
+    select(-c(i_type,p_type,age,geometry,report_date,personal_involvement,injury,birthmonth,infrastructure_changed,age_group,age_imp,gender))
+```
+
+```{r}
+#imputation recipe
+data_recipe_all <- recipe(injury_level ~ . , data = all_bike) %>%
+  step_impute_bag(incident_with, trip_purpose, regular_cyclist , helmet , road_conditions , sightlines , cars_on_roadside , bike_lights , terrain , bicycle_type , turning , ebike)
+```
+
+```{r,eval=FALSE}
+witness_imputed <- 
+  prep(data_recipe_all) %>% bake(new_data = all_bike)
+
+save(witness_imputed, file="20240404_witnessimputed.rda")
+```
+
+### Without Witness
 
 ```{r}
 all_bike <- data3 %>% 
@@ -197,10 +236,15 @@ load("20240105_allimputed.rda")
 ### Logistic model
 
 ```{r}
-all_imputed <- all_imputed %>% 
-  mutate(injury_bin = as.factor((injury_level!="A")))
+#base model
+base_logi <- glm(injury_level ~ ebike, data = witness_imputed, family = "binomial")
+plot_summs(base_logi)
+Anova(base_logi)
+```
 
-model_logi <- glm(injury_bin ~.-injury_level, data = all_imputed, family = "binomial")
+```{r}
+
+model_logi <- glm(injury_level ~., data = witness_imputed, family = "binomial")
 
 library(jtools)
 library(broom.mixed)
@@ -208,7 +252,7 @@ plot_summs(model_logi)
 library(car)
 Anova(model_logi)
 ## store model results
-ctable <- coef(summary(model_ebike))
+ctable <- coef(summary(model_logi))
 ## calculate and store p values
 p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
 ## combined table
@@ -438,7 +482,7 @@ save(ebike_imputed_lump, file="20231203_ebikeimputedlump.rda")
 ```
 
 ```{r}
-load("20231203_ebikeimputedlump.rda")
+load("../random_forest/20231203_ebikeimputedlump.rda")
 ```
 
 ### Model
@@ -446,7 +490,7 @@ load("20231203_ebikeimputedlump.rda")
 ```{r}
 #install.packages("broom.mixed")
 library(MASS)
-model_ebike <- polr(injury_level ~ .,data=ebike_imputed_lump, Hess=TRUE)
+model_ebike <- polr(injury_level ~ .-i_type-direction, data=ebike_imputed_lump, Hess=TRUE)
 summary(model_ebike)
 
 library(car)
@@ -574,23 +618,25 @@ save(regular_imputed, file="20231202_regularimputed.rda")
 ```
 
 ```{r}
-load("20231202_regularimputed.rda")
+load("../random_forest/20231202_regularimputed.rda")
 ```
 
 ### Model
 
 ```{r}
+# double check if not personal_involvment cases get used in imputation
+# what should be used to impute data?
 #install.packages("broom.mixed")
 library(MASS)
-model_regular <- polr(injury_level ~ .,data=regular_imputed, Hess=TRUE)
+model_regular <- polr(injury_level ~ .-i_type-direction,data=regular_imputed, Hess=TRUE)
 summary(model_regular)
 
 library(car)
 Anova(model_regular)
 
-# library(jtools)
-# library(broom.mixed)
-# plot_summs(model_ebike)
+ library(jtools)
+ library(broom.mixed)
+ plot_summs(model_regular)
 ```
 
 ```{r}

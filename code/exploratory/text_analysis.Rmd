@@ -1,0 +1,204 @@
+---
+title: "EDA"
+author: "Jiahua Chen"
+date: "2023-12-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("tidytext")
+#install.packages("textdata")
+#install.packages("wordcloud")
+library(tidyverse)
+library(textdata)
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+Canada <- readxl::read_excel("../data/Canada.xlsx")
+Canada$country <- "Canada"
+US <- readxl::read_excel("../data/United States.xlsx")
+US$country <- "US"
+df <- rbind(Canada,US)
+```
+
+## Why injured from near-miss?
+
+```{r}
+df_nearmiss_injured <- df %>% 
+  filter(injury!="No injury" & p_type=="nearmiss") %>% 
+  select(details)
+```
+
+## Text analysis
+
+```{r tidytext}
+
+details <- df %>% 
+  dplyr::filter(report_date > as.Date('2016-11-30')) %>% 
+  select(details,ebike,injury) %>% 
+   unnest_tokens(word, details) %>%
+  anti_join(stop_words) %>% 
+  count(ebike,word, sort = TRUE) 
+
+total_words <- details %>% 
+  group_by(ebike) %>% 
+  summarize(total = sum(n))
+
+details_words <- left_join(details, total_words)
+```
+
+## Injured + Ebike
+
+```{r}
+tidy_ebike <- df %>% 
+  filter(ebike=="Yes") %>%
+  dplyr::filter(report_date > as.Date('2016-11-30')) %>% 
+  select(details) %>% 
+  unnest_tokens(word, details) %>%
+  anti_join(stop_words) 
+
+tidy_ebike %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 50) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+```
+
+## Injured + Pedal
+
+```{r}
+tidy_pedal <- df %>%
+  dplyr::filter(report_date > as.Date('2016-11-30')) %>% 
+  filter(ebike=="No") %>% 
+  select(details) %>% 
+  unnest_tokens(word, details) %>%
+  anti_join(stop_words) 
+  
+
+tidy_pedal %>%
+  count(word, sort = TRUE) %>% 
+  filter(n > 50) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word)) +
+  geom_col() +
+  labs(y = NULL)
+
+```
+
+## Comparison
+
+```{r}
+library(tidyr)
+
+frequency <- bind_rows(mutate(tidy_ebike, bike_type = "ebike"),
+                       mutate(tidy_pedal, bike_type = "pedal")) %>% 
+  mutate(word = str_extract(word, "[a-z']+")) %>%
+  count(bike_type, word) %>%
+  group_by(bike_type) %>%
+  mutate(proportion = n / sum(n)) %>% 
+  select(-n) %>% 
+  pivot_wider(names_from = bike_type, values_from = proportion) 
+
+```
+
+```{r}
+library(scales)
+
+# expect a warning about rows with missing values being removed
+ggplot(frequency, aes(x = pedal, y = ebike)) + 
+  geom_abline(color = "gray40", lty = 2) +
+  geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1.5) +
+  scale_x_log10(labels = percent_format()) +
+  scale_y_log10(labels = percent_format()) +
+  scale_color_gradient(limits = c(0, 0.001), 
+                       low = "darkslategray4", high = "gray75") +
+  theme(legend.position="none") +
+  labs(y = "Ebike", x = "Pedal")
+```
+
+### Speed
+
+```{r}
+accelerate <- frequency %>% 
+  filter(str_detect(word,"accele"))
+speed <-frequency %>% 
+  filter(str_detect(word,"speed"))
+abrupt <- frequency %>% 
+  filter(str_detect(word,"abrupt"))
+```
+
+### Sentiment analysis
+
+```{r}
+get_sentiments("nrc")
+
+nrc_joy <- get_sentiments("nrc") %>% 
+  filter(sentiment == "joy")
+
+nrc_anger <- get_sentiments("nrc") %>% 
+  filter(sentiment == "anger")
+
+tidy_ebike %>%
+  inner_join(nrc_anger) %>%
+  count(word, sort = TRUE)
+
+```
+
+### Word cloud
+
+```{r}
+library(wordcloud)
+
+df %>% 
+  filter(ebike=="Yes") %>% 
+  select(details) %>% 
+  unnest_tokens(word, details) %>%
+  anti_join(stop_words) %>% 
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100, scale=c(1, .5)))
+
+```
+
+```{r}
+df %>% 
+  #filter(injury!="No Injury"&!is.na(injury)&ebike=="Yes") %>% 
+  filter(ebike=="Yes") %>% 
+  select(details) %>% 
+  unnest_tokens(word, details) %>%
+  anti_join(stop_words) %>% 
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100,scale=c(1, .5)))
+```
+
+### inverse document frequency
+
+```{r}
+details_words %>% 
+  filter(ebike=="Yes"|ebike=="No") %>% 
+  ggplot(aes(n/total, fill = ebike)) +
+  geom_histogram(show.legend = FALSE) +
+  xlim(NA, 0.0009) +
+  facet_wrap(~ebike, ncol = 2, scales = "free_y")
+```
+
+```{r}
+book_tf_idf <- details_words %>%
+  bind_tf_idf(word, ebike, n)
+
+book_tf_idf %>%
+  filter(ebike=="Yes"|ebike=="No") %>% 
+  group_by(ebike) %>%
+  slice_max(tf_idf, n = 15) %>%
+  ungroup() %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = ebike)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ebike, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```

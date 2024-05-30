@@ -22,7 +22,7 @@ tidymodels_prefer()
 ```{r}
 set.seed(1208)
 
-data <- rbind(readxl::read_excel("../../data/Canada.xlsx"),readxl::read_excel("../../data/United States.xlsx"))
+data <- rbind(readxl::read_excel("../../data/20240425Canada.xlsx"),readxl::read_excel("../../data/20240425United States.xlsx"))
 
 data <- data %>% 
   dplyr::filter(date > as.Date('2016-11-30')) 

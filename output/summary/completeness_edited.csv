@@ -1,0 +1,22 @@
+Variable,Completeness (%),Variable Attribute
+Incident details,,
+Were you injured?,100,Yes | No
+Did the incident involve a pedal-assist electric bike (eBike)?,87,Yes | No
+What type of incident was it?,100,Collison or Fall | Near miss
+What sort of object did you collide with?,100,"Animal | another bicyclist | curb | other | pedestrian | pothole | roadway | sign/post | train tracks | lane divider | vehicle, angle | vehicle, head on | vehicle, open door | vehicle, passing | vehicle, rear end | vehicle, side | vehicle, turning left | vehicle, turning right"
+What was the purpose of your trip?,98,Commute | exercise or recreation | personal business | social reason
+What type of bicycle were you riding?,91,Personal | Bike share |Bike rental | E scooter
+Conditions,,
+What were the road conditions?,77,Dry | wet | loose sand or gravel | icy | snowy
+How were the sight lines?,76,No obstructions | view obstructed | glare or reflection | obstruction on road
+Were there cars parked on the roadside?,75,Yes | No
+What was the terrain like?,77,Uphill | downhill | flat
+How were you moving?,78,Heading straight | turning left | turning right
+Personal details,,
+Do you bike at least once per week?,68,Yes | No
+Were you wearing a helmet?,67,Yes | No
+Were you using bike lights?,76,Front and back lights | front lights only | back lights only | no lights
+Gender (Please select your sex),64,Male | female | Non-binary
+Age (What is your birth year?),63,12~83
+Exposure measure,,
+Block population of where the incident happens,100,0~3269

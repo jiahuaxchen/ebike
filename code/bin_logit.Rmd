@@ -11,15 +11,36 @@ date: "2024-04-26"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(echo = FALSE,warning = FALSE)
+# install.packages("bayesplot")
 library(tidyverse)
 library(tidymodels)
+library(naniar)
+library(rstanarm)
+library(rstan)
+library(bayesplot)
 tidymodels_prefer()
 ```
-##
+
+## 
+
 ```{r}
 # read data with population imputation 
-data <- readRDS("../data/derive/all_bike_imputed_US.rds")
+data <- readRDS("../data/derive/all_bike_zero.rds")
+
+data <- data %>% 
+  dplyr::select(-c(geometry.x,geometry.y,X)) %>% 
+  sf::st_drop_geometry() %>% 
+  dplyr::select(-geometry)
+  
 ```
+
+```{r}
+## Making sure the classification of incident type
+data_need_attention <- data %>% 
+  filter(injury!="No injury") %>% 
+  filter(p_type == "nearmiss")
+```
+
 
 ## Clean data
 
@@ -42,18 +63,36 @@ vis_miss(data_regroup)
 data_prep <- data_regroup %>%
   filter(personal_involvement != "No") %>% 
   #drop column that are not related to injury prediction
-  dplyr::select(-c(index,injury,injury3,report_date,personal_involvement,p_type,age,geometry,birthmonth,infrastructure_changed,age_group,date,details,impact,pk,direction,geometry.x,geometry.y,X)) %>%
+  dplyr::select(-c(index,injury,injury3,report_date,personal_involvement,p_type,age,birthmonth,infrastructure_changed,age_group,date,details,impact,pk,direction)) %>%
   rename (pop = pop.x) %>% 
   #drop all column with more than 50% missing
   purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50)
 
 vis_miss(data_prep)
-  
+
+data_observe <-  data_regroup %>%
+  dplyr::select(-c(index,injury,injury3,report_date,p_type,age,geometry,birthmonth,infrastructure_changed,age_group,date,details,impact,pk,direction,geometry.x,geometry.y,X)) %>% 
+  filter(personal_involvement == "No") %>% 
+  rename (pop = pop.x)
+
+vis_miss(data_observe)
 ```
 
-##Imputation
+## Imputation
+
+### All
+
 ```{r}
-#  impute for ebike variable (ditched)
+all_for_impute <- data_prep %>% 
+  mutate(pop = ifelse(pop == 0, 1, pop)) 
+
+all_imputed <- impute(all_for_impute)
+  
+vis_miss(all_imputed)
+```
+
+```{r}
+# impute for ebike variable (ditched)
 # data_recipe_ebike <- recipe(injury2 ~ . , data = data_prep) %>%
 #     step_impute_bag(ebike)
 #   
@@ -61,7 +100,10 @@ vis_miss(data_prep)
 #   bake(new_data = data_prep)
 #   
 # summary(all_imputed$ebike)
+
 ```
+
+### Ebike
 
 ```{r}
 source("imputation.r")
@@ -76,7 +118,7 @@ ebike_imputed <- impute(ebike)
   
 vis_miss(ebike_imputed)
 ```
-
+### Pedal
 ```{r}
 pedal <- data_prep %>% 
   filter(ebike=="No") %>% 
@@ -87,8 +129,10 @@ pedal <- data_prep %>%
 pedal_imputed <- impute(pedal)
 ```
 
-## exploratory
+## Exploratory
 ```{r}
+ggplot(ebike_imputed,aes(x=age, y=))
+
 q <- ggplot(ebike_imputed, aes(x=bicycle_type, fill=injury2))
 q + geom_bar(position="fill") + 
   #scale_fill_viridis(discrete = T) +
@@ -109,36 +153,22 @@ ggplot(data_prep,aes(x=pop)) +
 ```
 
 ## Binary regression
+
+### Ebike
+
 ```{r}
-#install.packages("rstanarm")
-library(rstanarm)
-ebike_model_itype <- stan_glm(injury2 ~ .,
-                        data=ebike_imputed,
-                        #offset = log(pop),
+ebike_model <- stan_glm(injury2 ~ .-i_type-regular_cyclist,
+                        data=ebike_lump,
                         family = binomial(link = "logit"),
+                        offset = log(ebike_lump$pop),
                         seed = 1208,
                         refresh=0)
 
-summary(ebike_model_itype)
+summary(ebike_model)
+
 ```
 
-
-```{r}
-plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
-     pars = c(#"i_typecollison_fall", "incident_withbicyclist",
-              regular_cyclistN))
-plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
-     pars = c("regular_cyclistN"))
-
-plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
-     pars = c(#"i_typecollison_fall", "incident_withbicyclist",
-              "genderF"))
-plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
-     pars = c(#"i_typecollison_fall", "incident_withbicyclist",
-              "age_imp"))
-
-#round(posterior_interval(pedal_model, prob = 0.9), 2)
-```
+###Pedal Bike
 
 ```{r}
 pedal_model <- stan_glm(injury2 ~ . - i_type,
@@ -158,7 +188,6 @@ pedal_model_itype <- stan_glm(injury2 ~ .,
 summary(pedal_model)
 summary(pedal_model_itype)
 ```
-
 
 ```{r}
 pplot_P<-plot(pedal_model, "areas", prob = 0.95, prob_outer = 1)
@@ -188,5 +217,160 @@ summary(pedal_freq)
 saveRDS(ebike_model, file = "../output/model_result/ebike_baye.rds")
 saveRDS(pedal_model, file = "../output/model_result/pedal_baye.rds")
 
+```
+
+### All
+
+```{r}
+all_model <- stan_glm(injury2 ~ . - i_type,
+                        data=all_lump,
+                        family = binomial(link = "logit"),
+                        offset = log(all_lump$pop),
+                        seed = 1208,
+                        refresh=0)
+
+all_model_base <- stan_glm(injury2 ~ ebike,
+                        data=all_imputed,
+                        family = binomial(link = "logit"),
+                        offset = log(all_imputed$pop),
+                        seed = 1208,
+                        refresh=0)
+
+summary(all_model)
+summary(all_model_base)
+
+plot(all_model, plotfun = "areas", prob = 0.95,
+     pars = c("ebikeYes"))
+
+```
+
+
+```{r}
+# Extract the posterior samples for the coefficient of interest
+posterior_samples <- as.matrix(all_model_base)
+
+# Suppose you are interested in the coefficient for 'wt'
+coef_wt_samples <- posterior_samples[, "ebikeYes"]
+
+# Calculate the probability that the coefficient for 'wt' is less than 0
+prob_less_than_zero <- mean(coef_wt_samples < 0)
+```
+
+##Debug log
+
+```{r}
+## lump all classes less than 30 (10% of the dataset) and drop variable if there's only two classes and one of them is less than 30.
+## lump incident with, trip purpose, road condition, turning
+## for sightlines, bike lights, further lump the classes
+## drop regular cyclists and bicycle type in the model
+ebike_lump <- ebike_imputed %>%
+  mutate(across(where(~is.factor(.) && nlevels(.) > 2), ~fct_lump_min(., min = 30))) %>%
+  mutate(incident_with = fct_recode(incident_with, Other = "other", Other = "Other")) %>% 
+  mutate(road_conditions = fct_recode(road_conditions, Other = "Wet", Other = "Other")) %>%
+  mutate(turning = fct_recode(turning, turning = "Turning left", turning = "Other")) %>%
+  mutate(bike_lights = fct_recode(bike_lights, YL = "FB", YL = "Other")) %>% 
+  mutate(sightlines = fct_recode(sightlines, Other = "View obstructed", Other = "Other")) %>% 
+  mutate(across(where(is.factor), droplevels))
+
+summary(ebike_imputed)
+summary(ebike_lump)
+
+model_ebike_lump <- stan_glm(injury2 ~ .-i_type-regular_cyclist-bicycle_type,
+                        data=ebike_lump,
+                        family = binomial(link = "logit"),
+                        offset = log(ebike_lump$pop),
+                        seed = 1208,
+                        refresh=0)
+
+summary(model_ebike_lump)
+
+summary(test)
+  
+```
+
+```{r}
+summary(pedal_imputed)
+
+pedal_lump <- pedal_imputed %>% 
+  mutate(across(where(~is.factor(.) && nlevels(.) > 2), ~fct_lump_min(., min = 50))) %>%
+  # mutate(incident_with = fct_recode(incident_with, Other = "other", Other = "Other")) %>%
+  # mutate(road_conditions = fct_recode(road_conditions, Other = "Icy", Other = "Other")) %>%
+  # mutate(turning = fct_recode(turning, turning = "Turning left", turning = "Other")) %>%
+  mutate(bike_lights = fct_recode(bike_lights, YL = "FB", YL = "B", YL = "Other")) %>%
+  mutate(trip_purpose = fct_recode(trip_purpose, Other = "Other", Other = "Social reason")) %>% 
+  # mutate(sightlines = fct_recode(sightlines, Other = "Glare or reflection", Other = "Other")) %>%
+  mutate(across(where(is.factor), droplevels))
+
+summary(pedal_lump)
+
+model_pedal_lump <- stan_glm(injury2 ~ . - i_type - regular_cyclist - bicycle_type,
+                        data=pedal_lump,
+                        family = binomial(link = "logit"),
+                        offset = log(pedal_lump$pop),
+                        seed = 1208,
+                        refresh=0)
+
+```
+
+## Plot model
+```{r}
+# Extract posterior samples
+posterior_samples <- as.array(model_ebike_lump)
+posterior_samples <- as.array(model_pedal_lump)
+
+# Get the names of all parameters
+parameter_names <- dimnames(posterior_samples)$parameters
+
+# Plotting posterior distributions for all parameters
+mcmc_areas(posterior_samples, pars = parameter_names)
+
+# Plotting trace plots for all parameters
+mcmc_trace(posterior_samples, pars = parameter_names)
+
+# Plotting posterior intervals for all parameters
+mcmc_intervals(posterior_samples, pars = parameter_names) +
+  ggtitle("Posterior Intervals for Pedal Bike incidents injury factors") +
+  theme_classic()
+```
+
+```{r}
+plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
+     pars = c("i_typecollison_fall"))
+
+plot(ebike_model_itype, plotfun = "areas", prob = 0.95,
+     pars = c("terrainDownhill"))
+plot(ebike_model, plotfun = "areas", prob = 0.95,
+     pars = c("terrainDownhill"))
+
+plot(ebike_model_itype, plotfun = "areas", prob = 0.95,
+     pars = c("incident_withother","incident_withbicyclist","incident_withpedestrian"))
+plot(ebike_model, plotfun = "areas", prob = 0.95,
+     pars = c("incident_withother","incident_withbicyclist","incident_withpedestrian"))
+
+
+## ebike
+install.packages("gridExtra")
+library(gridExtra)
+
+# Assuming model_ebike_lump is already fitted
+# Create individual plots
+plot1 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("genderF"))
+plot2 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("age_imp"))
+plot3 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("terrainDownhill"))
+plot4 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("pop"))
+
+# Combine the plots into one graph
+combined_plot <- grid.arrange(plot1, plot2, plot3, ncol = 1)
+
+# Display the combined plot
+print(combined_plot)
+
+## pedal bike
+plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
+     pars = c("genderF"))
+plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
+     pars = c("age_imp"))
+plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
+     pars = c("terrainDownhill"))
 ```
 

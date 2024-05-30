@@ -1,0 +1,362 @@
+---
+title: "NSC report"
+author: "Jiahua Chen"
+date: "2023-12-18"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE, fig.align = "center")
+#install.packages("tidyverse")
+#install.packages("modelsummary")
+#install.packages("flextable")
+#install.packages("naniar")
+library(officer)
+library(viridis)
+library(tidyverse)
+library(modelsummary)
+library(flextable)
+library(naniar)
+```
+
+```{r}
+set_flextable_defaults(
+  theme_fun = "theme_booktabs")
+```
+
+```{r}
+Canada <- readxl::read_excel("code/data/Canada.xlsx")
+Canada$country <- "Canada"
+US <- readxl::read_excel("code/data/United States.xlsx")
+US$country <- "US"
+```
+
+```{r}
+df <- rbind(Canada,US)
+
+df <- df %>%
+  mutate(age = as.numeric(age)) %>% 
+  mutate(birthmonth = as.numeric(birthmonth)) %>% 
+  dplyr::filter(report_date > as.Date('2016-11-30')) %>% 
+  dplyr::select(-c(date,details,impact,pk,direction,x,y)) %>% 
+  mutate(ebike = ifelse(is.na(ebike),"NA",ebike)) %>% 
+  mutate_if(is.character,as.factor) %>% 
+  mutate(ebike=fct_relevel(ebike,c("Yes","No","I don't know","NA"))) 
+
+
+vis_miss(df)
+```
+
+## Data Summary
+
+### **SInce December 2016, how many incidents involved an ebike in the U.S. and Canada?**
+
+NA indicates no response.
+
+#### Raw count
+
+```{r, echo=FALSE}
+df %>% 
+  mutate(country=fct_relevel(country,c("US","Canada"))) %>% 
+  mutate(ebike = fct_relevel(ebike,c("Yes","No","I don't know","NA"))) %>% 
+#  dplyr::rename(Response = ebike) %>% 
+  datasummary_crosstab(ebike ~ country, statistic = . ~ N, data = .,
+                       output = 'flextable') %>%
+  autofit() %>% 
+  border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+```
+
+#### Percentage:
+
+```{r}
+df %>% 
+  mutate(country=fct_relevel(country,c("US","Canada"))) %>% 
+  mutate(ebike = fct_relevel(ebike,c("Yes","No","I don't know"))) %>% 
+#  dplyr::rename(Response = ebike) %>% 
+  datasummary_crosstab(ebike ~ country, statistic = . ~ Percent("col"), data = .,
+                       output = 'flextable') %>% 
+ autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+```
+
+#### By country
+
+```{r}
+df %>% 
+ filter(country=="US") %>% 
+  mutate(ebike = fct_relevel(ebike,c("Yes","No","I don't know"))) %>% 
+  #dplyr::rename(Response = ebike) %>% 
+  datasummary(ebike ~ N + Percent('col'), data = .,
+              title = 'Ebike vs Pedal Bike in the US',
+              output = 'flextable') %>% 
+  autofit()   %>% 
+  border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+
+df %>% 
+ filter(country=="Canada") %>% 
+  #mutate(ebike = fct_relevel(ebike,c("Yes","No","I don't know"))) %>% 
+  #dplyr::rename(ebike = ebike) %>% 
+  datasummary(ebike ~ N + Percent('col'), data = .,
+              title = 'Ebike vs Pedal Bike in Canada',
+              output = 'flextable') %>% 
+  autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+```
+
+## EBike vs Injury
+
+```{r}
+
+ggplot(df_sum,aes(x=ebike,fill=injury_level)) +
+  geom_bar(position="fill") +
+  scale_fill_viridis (discrete = T) +
+  coord_flip()
+```
+
+## Gender vs Injury
+
+```{r}
+df_sum <- df %>% 
+  #mutate_if(is.factor, ~replace(., . %in% values_to_convert, NA)) %>% 
+     mutate(across(where(is.factor), ~fct_drop(.))) %>% #drop the changed factors
+      mutate(gender = fct_collapse(gender,Male=c("['M']"),
+                               Female=c("['F']"),
+                               Unknown = "[]",
+                               other_level = 'Other')) 
+```
+
+### **What are the gender of people who reported e-bike incidents?**
+
+#### Raw count
+
+```{r}
+df_sum %>% 
+  mutate(gender = fct_relevel(gender,c("Female","Male","Other","Unknown"))) %>% 
+  datasummary(ebike ~ gender, statistic = 1~N, fmt = 0, data = .,
+              output = 'flextable') %>% 
+  autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+
+```
+
+#### Percentage
+
+```{r}
+df_sum %>% 
+  mutate(gender = fct_relevel(gender,c("Female","Male","Other","Unknown"))) %>% 
+  datasummary_crosstab(ebike ~ gender, statistic = . ~ Percent('row'), fmt = 1, data = .,
+             # title = 'Ebike report by gender - Percentage',
+              output = 'flextable') %>%
+    autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+```
+
+### **What are the injury level by gender?**
+
+```{r}
+
+df_sum <- df_sum %>%
+  mutate(injury_level = as.factor(ifelse(is.na(injury_level),"NA",injury))) %>%
+  mutate(injury_level = fct_collapse(injury,"No injury"=c("No injury"), "Injury no treatment"=c("Injury, no treatment"),"Injury with treatment"=c("Injury, hospitalized","Injury, saw family doctor","Injury, hospital emergency visit"), Unknown=c("Unknown"),"NA"="NA"))
+  
+summary(df$injury)
+summary(df_sum$injury_level)
+
+```
+
+#### Raw count
+
+```{r}
+df_sum %>% 
+  mutate(injury_level = fct_relevel(injury_level,c("No injury","Injury no treatment","Injury with treatment","Unknown"))) %>% 
+  filter(gender=="Female"|gender=="Male") %>% 
+  droplevels() %>% 
+  datasummary_crosstab(ebike*gender ~ injury_level, statistic = . ~ N, fmt = 0, data = .,
+           #   title = 'Ebike injury by gender - Count',
+              output = 'flextable') %>%
+    autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+
+```
+
+#### Percentage
+
+```{r}
+df_sum %>% 
+  mutate(injury_level = fct_relevel(injury_level,c("No injury","Injury no treatment","Injury with treatment","Unknown"))) %>% 
+  filter(gender=="Female"|gender=="Male") %>% 
+  droplevels() %>% 
+  datasummary_crosstab(ebike*gender ~ injury_level, statistic = . ~ Percent('row'), fmt = 1, data = .,
+             # title = 'Ebike injury by gender - Percentage',
+              output = 'flextable') %>%
+    autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+```
+
+#### **Graph Visualization:**
+
+```{r}
+#install.packages("viridis")
+df_sum %>% 
+  mutate(injury_level = fct_relevel(injury_level,c("No injury","Injury no treatment","Injury with treatment","Unknown"))) %>% 
+  filter(gender=="Female"|gender=="Male") %>% 
+  filter(ebike=="Yes"|ebike=="No") %>% 
+  droplevels() %>% 
+  ggplot(aes(x=gender,fill=injury_level)) +
+  geom_bar(position="fill") +
+  facet_grid(. ~ ebike) +
+  scale_fill_viridis(discrete = T) +
+  ylab("Percentage")
+```
+
+## Age vs Injury
+
+```{r}
+## calculate age
+df_age <- df %>% mutate(month_imp = case_when(!is.na(age)&is.na(birthmonth) ~ 1,
+                                              !is.na(birthmonth) ~ birthmonth)) %>%
+  mutate(date = as.character(with(., sprintf("%d-%02d", age, month_imp)))) %>%
+  mutate(date_imp = ifelse(is.na(age), as.integer(NA), paste(date, "-01", sep=""))) %>% 
+  mutate(injury_level = fct_collapse(injury,
+                                     "No injury"=c("No injury"),
+                                     "Injury no treatment"=c("Injury, no treatment"),
+                                     "Injury with treatment"=c("Injury, hospitalized",
+                                                               "Injury, saw family doctor",
+                                                               "Injury, hospital emergency visit"), Unknown=c("Unknown")))
+  
+df_age$date_imp <- as.Date(df_age$date_imp)
+
+age_func <- function(dob, age.day, units = "years", floor = TRUE) {
+    calc.age = lubridate::interval(dob, age.day) / lubridate::duration(num = 1, units = units)
+    if (floor) return(as.integer(floor(calc.age)))
+    return(calc.age)
+}
+
+df_age$age_imp <- age_func(df_age$date_imp,df_age$report_date)
+df_age <- df_age %>% 
+  mutate(age_group = case_when(
+      age_imp <= 12            ~ "0-12",
+      age_imp > 13 & age_imp <= 17 ~ "13-17",
+      age_imp > 18 & age_imp <= 24 ~ "18-24",
+      age_imp > 25 & age_imp <= 34 ~ "25-34",
+      age_imp > 35 & age_imp <= 44 ~ "35-44",
+      age_imp > 45 & age_imp <= 54 ~ "45-54",
+      age_imp > 55 & age_imp <= 64 ~ "55-64",
+      age_imp > 65 & age_imp <= 74 ~ "65-74",
+      age_imp > 75            ~ "75+"
+    ),
+    age_group = as.factor(age_group)) %>% 
+  mutate(age_group=fct_relevel(age_group,c("0-12","13-17","18-24","25-34","35-44","45-54","55-64","65-74","75+")))
+```
+
+### **What are the ages of people who reported e-bike incidents?**
+
+#### Raw count
+
+```{r}
+df_age %>% 
+  datasummary(ebike ~ age_group, 
+                     statistic = . ~ N,data=., fmt=0,output = 'flextable') %>%
+  autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+
+```
+
+#### Percentage
+
+```{r}
+df_age %>% 
+  datasummary_crosstab(ebike ~ age_group, 
+                     statistic = . ~ Percent("row"), fmt=1,data=.,
+                      output = 'flextable') %>%
+  autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+```
+
+#### Graph Visualization
+
+```{r}
+df_age %>% 
+  filter(ebike=="Yes"|ebike=="No") %>%
+  filter(!is.na(age_group)) %>% 
+  droplevels() %>% 
+  ggplot(aes(x=ebike,fill=age_group)) +
+  geom_bar(position="fill") +
+  scale_fill_viridis(discrete = T) +
+  ylab("Percentage")
+```
+
+### **What are the injury level by age?**
+
+#### **Raw count**
+
+```{r}
+df_age %>% 
+  mutate(injury_level = fct_relevel(injury_level,c("No injury","Injury no treatment","Injury with treatment","Unknown"))) %>%
+  filter(injury_level!="Unknown") %>% 
+  filter(ebike!="I don't know"& ebike!="NA") %>% 
+  droplevels() %>% 
+  datasummary(ebike*injury_level ~ age_group, 
+                     statistic = . ~ N,data=., fmt=0,output = 'flextable') %>%
+  autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+
+```
+
+#### Percentage
+
+```{r}
+df_age %>% 
+  filter(injury_level!="Unknown") %>% 
+  filter(ebike!="I don't know"& ebike!="NA") %>% 
+  droplevels() %>% 
+  datasummary_crosstab(ebike*injury_level ~ age_group, 
+                     statistic = . ~ Percent("row"), fmt=1,data=.,
+                      output = 'flextable') %>%
+  autofit() %>% 
+    border_remove() %>% 
+  hline_top(j = NULL, border = fp_border(color = "grey")) %>% 
+  bold(bold = TRUE, part = "header") 
+```
+
+#### Graph Visualization
+
+```{r}
+df_age %>% 
+  mutate(injury_level = fct_relevel(injury_level,c("No injury","Injury no treatment","Injury with treatment","Unknown"))) %>% 
+  filter(!is.na(age_group)) %>% 
+  filter(ebike=="Yes" | ebike=="No") %>%
+  filter(injury_level!="Unknown") %>%
+  droplevels() %>% 
+  ggplot(aes(x=injury_level,fill=age_group)) +
+  geom_bar(position="fill") +
+  facet_grid(. ~ ebike) +
+  scale_fill_viridis(discrete = T) +
+  scale_x_discrete(guide = guide_axis(n.dodge=2)) +
+  ylab("Percentage")
+```

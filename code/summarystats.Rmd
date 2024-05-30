@@ -7,6 +7,7 @@ date: "2024-04-26"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
+library(dplyr)
 ```
 
 ## R Markdown
@@ -28,8 +29,6 @@ date_cut <- format(as.Date(date),"%Y-%m")
 table(cut(date, 'month'))
 
 ```
-
-
 
 ```{r pressure, echo=FALSE}
 data_regroup %>% 
@@ -151,16 +150,100 @@ data_regroup %>%
   ggplot(aes(x=ebike,fill=gender)) +
   geom_bar(position="fill") + 
   #scale_fill_viridis (discrete = T) +
-  coord_flip() +
   labs (title = "Report by bike type * gender") 
 
-data_regroup %>% 
-  filter (gender == "F" | gender =="M") %>% 
+all_imputed %>% 
+  filter (gender == "F" | gender =="M") %>%
+  #mutate (ebike = factor(ebike, levels = c(NA,"No","Yes"))) %>% 
+  #filter (!is.na(personal_involvement)) %>% 
   ggplot(aes(x=ebike,fill=gender)) +
   geom_bar(position="fill") + 
-  #scale_fill_viridis (discrete = T) +
-  coord_flip() +
+  scale_fill_brewer(palette = "Paired") +
   labs (title = "Report by bike type * gender") +
-  facet_wrap(~personal_involvement)
+  #facet_wrap(~personal_involvement) +
+  theme_classic()
 ```
+
+```{r}
+## increasing number of ebike reports
+data_regroup %>% 
+  filter (!is.na(ebike)) %>%
+  mutate (report_date = as.Date(report_date, format="%Y-%m-%d")) %>% 
+  mutate (report_year = format(as.Date(report_date),"%Y")) %>% 
+  group_by(report_year) %>% 
+  ggplot(aes(x=report_year,fill=ebike)) +
+  geom_bar(position="fill") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_classic()
+
+# increasing female
+data_regroup %>% 
+  filter (gender == "F" | gender =="M") %>%
+  filter (!is.na(ebike)) %>%
+  #mutate (ebike = factor(ebike, levels = c(NA,"No","Yes"))) %>% 
+  #filter (!is.na(personal_involvement)) %>% 
+  ggplot(aes(x=ebike,fill=gender)) +
+  geom_bar(position="fill") + 
+  scale_fill_brewer(palette = "Paired") +
+  labs (title = "Report by bike type * gender") +
+  #facet_wrap(~personal_involvement) +
+  theme_classic()
+
+#increasing older people
+data_regroup %>% 
+  filter (!is.na(ebike)) %>%
+  filter (!is.na(age_group)) %>%
+  filter(personal_involvement=="Yes") %>% 
+   mutate(age_group = factor(age_group,
+                            levels=c("0-12", "13-17",
+                                     "18-24","25-34",
+                                     "35-44","45-54",
+                                     "55-64","65-74",
+                                     "75+"))) %>% 
+  #mutate (ebike = factor(ebike, levels = c(NA,"No","Yes"))) %>% 
+  #filter (!is.na(personal_involvement)) %>% 
+  ggplot(aes(x=ebike,fill=age_group)) +
+  geom_bar(position="fill") + 
+  scale_fill_brewer(palette = "RdYlBu") +
+  labs (title = "Report by bike type * gender") +
+  facet_wrap(~injury2) +
+  theme_classic()
+
+```
+```{r}
+## summary stats
+data_sum <- data_regroup %>%
+  dplyr::select(-c(index,injury,injury3,report_date,p_type,age,birthmonth,infrastructure_changed,date,details,impact,pk,direction,age_imp,pop.x)) %>%
+  #drop all column with more than 50% missing
+  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50) %>% 
+  mutate(across(where(is.factor), ~ fct_explicit_na(., na_level = "Missing")))
+
+ebike_sum <- data_sum %>% 
+  filter(ebike == "Yes")
+  
+  
+```
+
+```{r}
+library(modelsummary)
+
+datasummary((i_type + incident_with + personal_involvement + trip_purpose + regular_cyclist + helmet + road_conditions + sightlines + cars_on_roadside + bike_lights + terrain + bicycle_type + ebike + turning + gender + age_group) ~ injury2 * (N + Percent()), data = data_sum
+            , output = '../output/summary/categorical.docx'
+            )
+
+datasummary((i_type + incident_with + personal_involvement + trip_purpose + regular_cyclist + helmet + road_conditions + sightlines + cars_on_roadside + bike_lights + terrain + bicycle_type + ebike + turning + gender + age_group + injury2) ~ ebike * (N + Percent()), data = data_sum
+            , output = '../output/summary/sumFacetEbike.docx'
+            )
+
+datasummary((i_type + incident_with + personal_involvement + trip_purpose + regular_cyclist + helmet + road_conditions + sightlines + cars_on_roadside + bike_lights + terrain + bicycle_type + ebike + turning + gender + age_group) ~ injury2 * (N + Percent()), data = ebike_sum
+            , output = '../output/summary/ebike.docx'
+            )
+
+
+```
+
+```{r}
+summary(as.factor(all_bike_zero$personal_involvement))
+```
+
 

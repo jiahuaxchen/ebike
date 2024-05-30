@@ -33,8 +33,10 @@ regroup <- function(data){
                                             "Vehicle, side",
                                             "Vehicle, open door"),
                                         bicyclist = "Another cyclist",
-                                        pedestrian = "Pedestrian",
-                                        other_level = "other")) %>% 
+                                        pedestrian = "Pedestrian"
+                                        #,
+                                        #other_level = "other"
+                                        )) %>% 
     mutate(i_type = fct_collapse(i_type, 
                                  near_collison = c("Near collision with moving object or vehicle",
                                                     "Near collision with stationary object or vehicle"),

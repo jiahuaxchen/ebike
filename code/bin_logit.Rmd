@@ -275,7 +275,7 @@ ebike_lump <- ebike_imputed %>%
 summary(ebike_imputed)
 summary(ebike_lump)
 
-model_ebike_lump <- stan_glm(injury2 ~ .-i_type-regular_cyclist-bicycle_type,
+model_ebike_lump <- stan_glm(injury2 ~ .-i_type-regular_cyclist-bicycle_type-pop,
                         data=ebike_lump,
                         family = binomial(link = "logit"),
                         offset = log(ebike_lump$pop),
@@ -283,6 +283,8 @@ model_ebike_lump <- stan_glm(injury2 ~ .-i_type-regular_cyclist-bicycle_type,
                         refresh=0)
 
 summary(model_ebike_lump)
+
+saveRDS(model_ebike_lump,"models/model_ebike_lump.rds")
 
 summary(test)
   
@@ -303,12 +305,14 @@ pedal_lump <- pedal_imputed %>%
 
 summary(pedal_lump)
 
-model_pedal_lump <- stan_glm(injury2 ~ . - i_type - regular_cyclist - bicycle_type,
+model_pedal_lump <- stan_glm(injury2 ~ . - i_type - regular_cyclist - bicycle_type - pop,
                         data=pedal_lump,
                         family = binomial(link = "logit"),
                         offset = log(pedal_lump$pop),
                         seed = 1208,
                         refresh=0)
+
+saveRDS(model_pedal_lump,"models/model_pedal_lump.rds")
 
 ```
 
@@ -329,24 +333,11 @@ mcmc_trace(posterior_samples, pars = parameter_names)
 
 # Plotting posterior intervals for all parameters
 mcmc_intervals(posterior_samples, pars = parameter_names) +
-  ggtitle("Posterior Intervals for Pedal Bike incidents injury factors") +
+  ggtitle("Posterior Intervals for Pedal bike incidents injury factors") +
   theme_classic()
 ```
 
 ```{r}
-plot(ebike_model_itype, plotfun = "areas", prob = 0.9,
-     pars = c("i_typecollison_fall"))
-
-plot(ebike_model_itype, plotfun = "areas", prob = 0.95,
-     pars = c("terrainDownhill"))
-plot(ebike_model, plotfun = "areas", prob = 0.95,
-     pars = c("terrainDownhill"))
-
-plot(ebike_model_itype, plotfun = "areas", prob = 0.95,
-     pars = c("incident_withother","incident_withbicyclist","incident_withpedestrian"))
-plot(ebike_model, plotfun = "areas", prob = 0.95,
-     pars = c("incident_withother","incident_withbicyclist","incident_withpedestrian"))
-
 
 ## ebike
 install.packages("gridExtra")
@@ -357,20 +348,32 @@ library(gridExtra)
 plot1 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("genderF"))
 plot2 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("age_imp"))
 plot3 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("terrainDownhill"))
-plot4 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("pop"))
+plot4 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("cars_on_roadsideY"))
+plot5 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("sightlinesOther"))
+plot6 <- plot(model_ebike_lump, plotfun = "areas", prob = 0.95, pars = c("bike_lightsNL"))
 
 # Combine the plots into one graph
-combined_plot <- grid.arrange(plot1, plot2, plot3, ncol = 1)
+combined_plot <- grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, ncol = 2)
 
 # Display the combined plot
 print(combined_plot)
 
 ## pedal bike
-plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
+plot1 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
      pars = c("genderF"))
-plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
+plot2 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
      pars = c("age_imp"))
-plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
+plot3 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
      pars = c("terrainDownhill"))
+plot4 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95, pars = c("cars_on_roadsideY"))
+plot5 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95, pars = c("sightlinesOther"))
+plot6 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95, pars = c("bike_lightsNL"))
+
+# Combine the plots into one graph
+combined_plot <- grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, ncol = 2)
+
+# Display the combined plot
+print(combined_plot)
 ```
+
 

@@ -70,12 +70,12 @@ data_prep <- data_regroup %>%
 
 vis_miss(data_prep)
 
-data_observe <-  data_regroup %>%
-  dplyr::select(-c(index,injury,injury3,report_date,p_type,age,geometry,birthmonth,infrastructure_changed,age_group,date,details,impact,pk,direction,geometry.x,geometry.y,X)) %>% 
-  filter(personal_involvement == "No") %>% 
-  rename (pop = pop.x)
-
-vis_miss(data_observe)
+# data_observe <-  data_regroup %>%
+#   dplyr::select(-c(index,injury,injury3,report_date,p_type,age,geometry,birthmonth,infrastructure_changed,age_group,date,details,impact,pk,direction,geometry.x,geometry.y,X)) %>% 
+#   filter(personal_involvement == "No") %>% 
+#   rename (pop = pop.x)
+# 
+# vis_miss(data_observe)
 ```
 
 ## Imputation
@@ -108,13 +108,19 @@ vis_miss(all_imputed)
 ```{r}
 source("imputation.r")
 #  subset ebike and drop unused level
+set.seed(1208)
+
 ebike <- data_prep %>% 
   filter(ebike=="Yes") %>% 
   mutate(pop = ifelse(pop == 0, 1, pop)) %>% 
   mutate(across(where(is.factor), ~fct_drop(.))) %>% 
   select (-ebike)
 
-ebike_imputed <- impute(ebike)
+data_recipe_ebike <- recipe(injury2 ~ . , data = ebike) %>%
+  step_impute_bag(all_predictors())
+  
+ebike_imputed <- 
+  prep(data_recipe_ebike) %>% bake(new_data = ebike)
   
 vis_miss(ebike_imputed)
 ```
@@ -126,6 +132,7 @@ pedal <- data_prep %>%
   mutate(across(where(is.factor), ~fct_drop(.))) %>% 
   select (-ebike)
 
+set.seed(1208)
 pedal_imputed <- impute(pedal)
 ```
 
@@ -256,7 +263,8 @@ coef_wt_samples <- posterior_samples[, "ebikeYes"]
 prob_less_than_zero <- mean(coef_wt_samples < 0)
 ```
 
-##Debug log
+##Debug log - lump levels
+### Ebike
 
 ```{r}
 ## lump all classes less than 30 (10% of the dataset) and drop variable if there's only two classes and one of them is less than 30.
@@ -284,15 +292,16 @@ model_ebike_lump <- stan_glm(injury2 ~ .-i_type-regular_cyclist-bicycle_type-pop
 
 summary(model_ebike_lump)
 
-saveRDS(model_ebike_lump,"models/model_ebike_lump.rds")
+saveRDS(model_ebike_lump,"models/model_ebike_lump_0614.rds")
 
-summary(test)
   
 ```
 
+###Pedal
 ```{r}
 summary(pedal_imputed)
 
+## minimal class n=50
 pedal_lump <- pedal_imputed %>% 
   mutate(across(where(~is.factor(.) && nlevels(.) > 2), ~fct_lump_min(., min = 50))) %>%
   # mutate(incident_with = fct_recode(incident_with, Other = "other", Other = "Other")) %>%
@@ -312,35 +321,42 @@ model_pedal_lump <- stan_glm(injury2 ~ . - i_type - regular_cyclist - bicycle_ty
                         seed = 1208,
                         refresh=0)
 
-saveRDS(model_pedal_lump,"models/model_pedal_lump.rds")
+saveRDS(model_pedal_lump,"models/model_pedal_lump_0614.rds")
 
 ```
 
 ## Plot model
 ```{r}
 # Extract posterior samples
-posterior_samples <- as.array(model_ebike_lump)
-posterior_samples <- as.array(model_pedal_lump)
+posterior_samples_ebike <- as.array(model_ebike_lump)
+posterior_samples_pedal <- as.array(model_pedal_lump)
 
 # Get the names of all parameters
-parameter_names <- dimnames(posterior_samples)$parameters
+parameter_names_ebike <- dimnames(posterior_samples_ebike)$parameters
+parameter_names_pedal <- dimnames(posterior_samples_pedal)$parameters
 
 # Plotting posterior distributions for all parameters
-mcmc_areas(posterior_samples, pars = parameter_names)
+#mcmc_areas(posterior_samples, pars = parameter_names)
 
 # Plotting trace plots for all parameters
-mcmc_trace(posterior_samples, pars = parameter_names)
+# mcmc_trace(posterior_samples, pars = parameter_names)
 
 # Plotting posterior intervals for all parameters
-mcmc_intervals(posterior_samples, pars = parameter_names) +
+mcmc_intervals(posterior_samples_pedal, pars = parameter_names_pedal) +
   ggtitle("Posterior Intervals for Pedal bike incidents injury factors") +
+  theme_classic()
+
+mcmc_intervals(posterior_samples_ebike, pars = parameter_names_ebike) +
+  ggtitle("Posterior Intervals for E-bike incidents injury factors") +
   theme_classic()
 ```
 
 ```{r}
+readRDS("/Users/chenjiahua/Documents/GitHub/ebike/code/models/model_ebike_lump.rds")
+readRDS("/Users/chenjiahua/Documents/GitHub/ebike/code/models/model_pedal_lump.rds")
 
 ## ebike
-install.packages("gridExtra")
+#install.packages("gridExtra")
 library(gridExtra)
 
 # Assuming model_ebike_lump is already fitted
@@ -359,12 +375,9 @@ combined_plot <- grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, ncol = 2
 print(combined_plot)
 
 ## pedal bike
-plot1 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
-     pars = c("genderF"))
-plot2 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
-     pars = c("age_imp"))
-plot3 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95,
-     pars = c("terrainDownhill"))
+plot1 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95, pars = c("genderF"))
+plot2 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95, pars = c("age_imp"))
+plot3 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95, pars = c("terrainDownhill"))
 plot4 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95, pars = c("cars_on_roadsideY"))
 plot5 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95, pars = c("sightlinesOther"))
 plot6 <- plot(model_pedal_lump, plotfun = "areas", prob = 0.95, pars = c("bike_lightsNL"))

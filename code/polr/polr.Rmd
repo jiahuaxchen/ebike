@@ -34,7 +34,6 @@ library(naniar)
 vis_miss(data)
 ```
 
-
 ### Speed
 
 ```{r}

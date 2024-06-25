@@ -13,12 +13,17 @@ Canada <- readxl::read_excel("data/20240425Canada.xlsx") %>%
 US <- readxl::read_excel("data/20240425United States.xlsx") %>% 
   dplyr::filter(date > as.Date('2016-11-30'))
 
-US_Can <- data %>% 
+Canada_filtered <- Canada %>% 
   dplyr::filter(date > as.Date('2016-11-30')) %>% # n=5013
   dplyr::filter(!is.na(ebike)) %>% # n=3820
   dplyr::filter(!is.na(injury)) %>%  #didn't change sample size
-  dplyr::filter(personal_involvement=="Yes") %>% 
-  dplyr::filter(ebike=="Yes")
+  dplyr::filter(personal_involvement=="Yes")
+
+US_filtered <- US %>% 
+  dplyr::filter(date > as.Date('2016-11-30')) %>% # n=5013
+  dplyr::filter(!is.na(ebike)) %>% # n=3820
+  dplyr::filter(!is.na(injury)) %>%  #didn't change sample size
+  dplyr::filter(personal_involvement=="Yes")
 
 US_Can <- data %>% 
   dplyr::filter(date > as.Date('2016-11-30')) %>% # n=5013

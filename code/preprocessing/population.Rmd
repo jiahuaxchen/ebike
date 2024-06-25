@@ -38,11 +38,11 @@ library(naniar)
 vis_miss(data)
 ```
 
-## Project data
+## Turn BikeMpas into Sf object
 ```{r}
 # turn BikeMap data into 
 projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-data_sf <- st_as_sf(x = US,                         
+data_sf <- st_as_sf(x = Canada_filtered,                         
            coords = c("x", "y"),
            crs = projcrs)
 ```
@@ -76,7 +76,7 @@ library(dplyr)
 results <- list()
 
 for (state in updated_states) {
-  file_name <- paste0(getwd(), "/RDA/blocks_data_", state, ".rds")
+  file_name <- paste0(getwd(), "../RDA/blocks_data_", state, ".rds")
   blocks_data <- readRDS(file_name)
   
   if (st_crs(data_sf) != st_crs(blocks_data)) {
@@ -128,9 +128,9 @@ all_US <- st_as_sf(all_US)
 ###Canada
 
 ```{r}
-Canada_DB <- st_read("../data/CanadaPop/ldb_000b21a_e/ldb_000b21a_e.shp")
+Canada_DB <- st_read("../../data/CanadaPop/ldb_000b21a_e/ldb_000b21a_e.shp")
 
-Canada_pop <- read_csv("../data/CanadaPop/Canpop.csv")
+Canada_pop <- read_csv("../../data/CanadaPop/Canpop.csv")
 
 Canada_DB_rename <- Canada_DB %>% 
   mutate(DBUID = as.numeric(DBUID))%>% 
@@ -158,8 +158,10 @@ end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken
 
-st_write(all_Canada, "../data/derive/all_bike_Ca_pop_0425.shp",
+st_write(all_Canada, "../../data/derive/all_bike_Ca_pop_0625.shp",
          append=FALSE)
+
+sum(all_Canada$DBPOP2021_IDPOP2021==0)
 
 ```
 ### Bind
@@ -361,11 +363,17 @@ saveRDS(combined_zero_pop, "../data/derive/zero_point_imputed.rds")
 ### Canada
 ```{r}
 # find the DBUID of zero population blocks
+zero_pop_crashes <- all_Canada %>%
+  filter(pop == 0)
+  
 Canada_zero_DBUID <- st_join(zero_pop_crashes, left = FALSE, Canada_DB_pop["DBUID_IDIDU"])
 ```
 
 
 ```{r}
+# suppress warning message due to intersecting using wgs84 instead of projected
+options(warn = -1)
+
 # buffer the block to find neighboring blocks
 # Subset blocks that contain zero-population points for the current state
 zero_pop_geoids <- Canada_zero_DBUID %>%
@@ -413,7 +421,7 @@ for (i in seq_len(nrow(zero_pop_blocks))) {
 # Combine the neighbor blocks information into a single data frame
 combined_neighbor_info <- do.call(rbind, state_neighbors)
 
-saveRDS(combined_neighbor_info,"../data/derive/combined_neighbor_info_Canada.rds")
+#saveRDS(combined_neighbor_info,"../data/derive/neighbor_Canada_0625.rds")
 
 ```
 
@@ -423,13 +431,6 @@ mean_populations <- combined_neighbor_info %>%
   group_by(zero_pop_DBUID) %>%
   summarize(avg_population = mean(population, na.rm = TRUE))
 
-```
-
-```{r}
-# Calculate mean population for each zero-population block based on neighboring blocks
-mean_populations <- combined_neighbor_info %>%
-  group_by(zero_pop_GEOID) %>%
-  summarize(avg_population = mean(population, na.rm = TRUE))
 ```
 
 

@@ -27,10 +27,9 @@ tidymodels_prefer()
 # read data with population imputation 
 data <- readRDS("../data/derive/all_bike_zero.rds")
 
-data <- data %>% 
-  dplyr::select(-c(geometry.x,geometry.y,X)) %>% 
-  sf::st_drop_geometry() %>% 
-  dplyr::select(-geometry)
+data5013 <- rbind(readxl::read_excel("../data/20240425Canada.xlsx"),
+                  readxl::read_excel("../data/20240425United States.xlsx")) %>% 
+  filter(date > as.Date('2016-11-30')) 
   
 ```
 
@@ -53,6 +52,7 @@ source("regroup_level.R")
 ```{r}
 data_age <- calculate_age(data)
 data_regroup <- regroup(data_age)
+
 ```
 
 ```{r}
@@ -138,9 +138,9 @@ pedal_imputed <- impute(pedal)
 
 ## Exploratory
 ```{r}
-ggplot(ebike_imputed,aes(x=age, y=))
+#ggplot(ebike_imputed,aes(x=age, y=))
 
-q <- ggplot(ebike_imputed, aes(x=bicycle_type, fill=injury2))
+q <- ggplot(ebike_imputed, aes(x=ebike, fill=injury2))
 q + geom_bar(position="fill") + 
   #scale_fill_viridis(discrete = T) +
   coord_flip()

@@ -44,8 +44,8 @@ data_need_attention <- data %>%
 ## Clean data
 
 ```{r clean, echo=FALSE}
-source("calculate_age.R")
-source("regroup_level.R")
+source("preprocessing/calculate_age.R")
+source("preprocessing/regroup_level.R")
 
 ```
 
@@ -61,6 +61,7 @@ vis_miss(data_regroup)
 
 ```{r}
 data_prep <- data_regroup %>%
+  filter(!is.na(ebike)) %>% 
   filter(personal_involvement != "No") %>% 
   #drop column that are not related to injury prediction
   dplyr::select(-c(index,injury,injury3,report_date,personal_involvement,p_type,age,birthmonth,infrastructure_changed,age_group,date,details,impact,pk,direction)) %>%
@@ -134,29 +135,6 @@ pedal <- data_prep %>%
 
 set.seed(1208)
 pedal_imputed <- impute(pedal)
-```
-
-## Exploratory
-```{r}
-#ggplot(ebike_imputed,aes(x=age, y=))
-
-q <- ggplot(ebike_imputed, aes(x=ebike, fill=injury2))
-q + geom_bar(position="fill") + 
-  #scale_fill_viridis(discrete = T) +
-  coord_flip()
-```
-
-```{r}
-ggplot(data_age,aes(x=incident_with,fill=injury)) +
-  geom_bar(position="fill") +
-  #scale_fill_viridis(discrete = T) +
-  coord_flip()
-
-ggplot(data_prep,aes(x=injury2,y=pop)) +
-  geom_boxplot() 
-
-ggplot(data_prep,aes(x=pop)) +
-  geom_histogram(bins=300) 
 ```
 
 ## Binary regression
@@ -327,6 +305,9 @@ saveRDS(model_pedal_lump,"models/model_pedal_lump_0614.rds")
 
 ## Plot model
 ```{r}
+model_ebike_lump <- readRDS("models/model_ebike_lump_0614.rds")
+model_pedal_lump <- readRDS("models/model_pedal_lump_0614.rds")
+
 # Extract posterior samples
 posterior_samples_ebike <- as.array(model_ebike_lump)
 posterior_samples_pedal <- as.array(model_pedal_lump)

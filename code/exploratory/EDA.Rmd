@@ -100,6 +100,8 @@ data_regroup %>%
   labs (title = "Percentage of report by age group") +
   facet_wrap(~ebike)
 ```
+
+
 ```{r}
 data_prep %>% 
   filter (injury2 == "TRUE") %>%
@@ -123,15 +125,18 @@ data_regroup %>%
   summarise(avg = mean(age_imp,na.rm = TRUE),
             med = median(age_imp,na.rm = TRUE))
 
+library(modelsummary)
+datasummary(ebike ~ gender, data=data_prep)
+
 ```
 
 ```{r injury level}
-data_regroup %>% 
+data_prep %>% 
   ggplot(aes(x=ebike,fill=injury2)) +
   geom_bar(position="fill") + 
-  #scale_fill_viridis (discrete = T) +
-  coord_flip() +
-  labs (title = "Injury level by bike type")
+  scale_fill_brewer(palette = "Paired") +
+  labs (title = "Injury level by bike type") +
+  theme_classic()
 ```
 
 ```{r gender}
@@ -210,6 +215,7 @@ data_regroup %>%
   theme_classic()
 
 ```
+
 ```{r}
 ## summary stats
 data_sum <- data_regroup %>%
@@ -246,4 +252,26 @@ datasummary((i_type + incident_with + personal_involvement + trip_purpose + regu
 summary(as.factor(all_bike_zero$personal_involvement))
 ```
 
+## Exploratory
+```{r}
+#ggplot(ebike_imputed,aes(x=age, y=))
+
+q <- ggplot(ebike_imputed, aes(x=ebike, fill=injury2))
+q + geom_bar(position="fill") + 
+  #scale_fill_viridis(discrete = T) +
+  coord_flip()
+```
+
+```{r}
+ggplot(data_age,aes(x=incident_with,fill=injury)) +
+  geom_bar(position="fill") +
+  #scale_fill_viridis(discrete = T) +
+  coord_flip()
+
+ggplot(data_prep,aes(x=injury2,y=pop)) +
+  geom_boxplot() 
+
+ggplot(data_prep,aes(x=pop)) +
+  geom_histogram(bins=300) 
+```
 

@@ -64,7 +64,7 @@ data_prep <- data_regroup %>%
   filter(!is.na(ebike)) %>% 
   filter(personal_involvement != "No") %>% 
   #drop column that are not related to injury prediction
-  dplyr::select(-c(index,injury,injury3,report_date,personal_involvement,p_type,age,birthmonth,infrastructure_changed,age_group,date,details,impact,pk,direction)) %>%
+  dplyr::select(-c(index,injury,injury3,report_date,personal_involvement,p_type,age,birthmonth,infrastructure_changed,date,impact,pk,direction)) %>%
   rename (pop = pop.x) %>% 
   #drop all column with more than 50% missing
   purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50)
@@ -109,7 +109,8 @@ vis_miss(all_imputed)
 ```{r}
 source("imputation.r")
 #  subset ebike and drop unused level
-set.seed(1208)
+# set.seed(1208)
+set.seed(120)
 
 ebike <- data_prep %>% 
   filter(ebike=="Yes") %>% 
@@ -122,8 +123,9 @@ data_recipe_ebike <- recipe(injury2 ~ . , data = ebike) %>%
   
 ebike_imputed <- 
   prep(data_recipe_ebike) %>% bake(new_data = ebike)
-  
-vis_miss(ebike_imputed)
+
+summary(ebike)  
+vis_miss(ebike)
 ```
 ### Pedal
 ```{r}

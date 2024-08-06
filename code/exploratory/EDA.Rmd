@@ -16,6 +16,22 @@ data <- rbind(readxl::read_excel("../data/20240425Canada.xlsx"),readxl::read_exc
 
 data <- data %>% 
   dplyr::filter(date > as.Date('2016-11-30')) 
+
+data_prep <- data_regroup %>%
+  filter(!is.na(ebike)) %>% 
+  filter(personal_involvement != "No") %>% 
+  #drop column that are not related to injury prediction
+  dplyr::select(-c(index,injury,injury3,report_date,personal_involvement,p_type,age,birthmonth,infrastructure_changed,date,impact,pk,direction)) %>%
+  rename (pop = pop.x) %>% 
+  #drop all column with more than 50% missing
+  purrr::discard(~sum(is.na(.x))/length(.x)* 100 >=50) %>% 
+  mutate(age_group = factor(age_group,
+                            levels=c("0-12", "13-17",
+                                     "18-24","25-34",
+                                     "35-44","45-54",
+                                     "55-64","65-74",
+                                     "75+"))) 
+
 ```
 
 ## Including Plots
@@ -124,9 +140,26 @@ data_regroup %>%
   group_by(ebike) %>% 
   summarise(avg = mean(age_imp,na.rm = TRUE),
             med = median(age_imp,na.rm = TRUE))
+```
 
+# Age
+```{r}
 library(modelsummary)
-datasummary(ebike ~ gender, data=data_prep)
+datasummary_crosstab(ebike ~ age_group,
+            data=data_prep,
+            statistic = 1 ~ N + Percent("row"))
+
+
+
+require(ggplot2)
+require(reshape2)
+p <- ggplot(data = data_prep, aes(x=age_imp)) + 
+  geom_density(aes(fill=ebike), alpha = 0.4) +
+  facet_wrap(~injury2)
+
+p + 
+  scale_fill_brewer(palette = "Paired") +
+  theme_classic()
 
 ```
 

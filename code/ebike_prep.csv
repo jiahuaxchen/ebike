@@ -1,0 +1,344 @@
+incident_with;trip_purpose;helmet;road_conditions;sightlines;cars_on_roadside;bike_lights;terrain;intersection;turning;gender;pop;age_imp;injury2
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;268,00000000000000;19;TRUE
+vehicle;Other;Y;Dry;Other;N;YL;Flat;Y;Heading straight;M;10,00000000000000;43;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;91,00000000000000;24;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;224,00000000000000;38;FALSE
+vehicle;Personal business;N;Other;No obstructions;N;YL;Downhill;Y;Heading straight;M;6,00000000000000;40;TRUE
+Other;Other;Y;Other;No obstructions;N;NL;Downhill;Y;Other;F;1448,00000000000000;22;TRUE
+Other;Commute;Y;Dry;Other;N;YL;Downhill;N;Heading straight;F;144,66666666666666;38;FALSE
+Other;Personal business;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;30,37500000000000;15;FALSE
+Other;Other;Y;Dry;No obstructions;N;NL;Flat;N;Heading straight;M;61,00000000000000;26;TRUE
+vehicle;Commute;Y;Dry;Other;Y;NL;Flat;Y;Heading straight;F;70,00000000000000;39;FALSE
+vehicle;Commute;Y;Dry;Other;N;NL;Flat;Y;Other;F;158,00000000000000;43;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Downhill;Y;Heading straight;F;158,77777777777777;23;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;Y;YL;Uphill;N;Heading straight;F;257,00000000000000;23;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Downhill;N;Heading straight;M;39,00000000000000;59;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;129,62500000000000;41;FALSE
+vehicle;Commute;N;Dry;No obstructions;Y;YL;Flat;N;Heading straight;M;15,00000000000000;51;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;129,62500000000000;41;FALSE
+vehicle;Personal business;Y;Dry;Other;Y;NL;Uphill;Y;Other;F;53,00000000000000;29;FALSE
+vehicle;Commute;Y;Other;No obstructions;Y;YL;Flat;N;Heading straight;Other;74,00000000000000;33;TRUE
+vehicle;Personal business;Y;Dry;No obstructions;Y;YL;Flat;N;Heading straight;M;195,00000000000000;48;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;68,00000000000000;22;FALSE
+Other;Other;Y;Dry;Other;N;NL;Uphill;N;Heading straight;M;82,57142857142857;62;TRUE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;289,00000000000000;41;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;N;Other;F;289,00000000000000;22;FALSE
+Other;Other;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;M;14,00000000000000;55;TRUE
+vehicle;Personal business;Y;Dry;No obstructions;Y;YL;Flat;N;Heading straight;F;79,00000000000000;39;FALSE
+vehicle;Commute;N;Dry;No obstructions;Y;YL;Flat;N;Heading straight;M;270,00000000000000;51;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;N;Heading straight;M;45,28571428571428;32;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Downhill;Y;Heading straight;F;8,00000000000000;24;TRUE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;M;57,00000000000000;37;FALSE
+Other;Personal business;Y;Dry;Other;Y;YL;Flat;N;Other;F;10,00000000000000;46;FALSE
+vehicle;Other;N;Dry;No obstructions;N;NL;Flat;N;Heading straight;M;97,75000000000000;43;FALSE
+vehicle;Commute;N;Dry;No obstructions;Y;YL;Flat;N;Other;F;6,00000000000000;34;TRUE
+vehicle;Commute;Y;Dry;No obstructions;Y;NL;Flat;Y;Heading straight;M;14,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;21,45454545454545;53;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;20,00000000000000;44;FALSE
+Other;Commute;Y;Other;No obstructions;Y;YL;Flat;N;Heading straight;F;48,00000000000000;44;FALSE
+vehicle;Commute;Y;Dry;Other;N;NL;Downhill;N;Heading straight;F;174,00000000000000;40;FALSE
+vehicle;Commute;N;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;191,00000000000000;31;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;244,00000000000000;44;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Downhill;N;Heading straight;F;27,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Other;F;419,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Downhill;Y;Other;F;168,00000000000000;39;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Other;F;4,00000000000000;41;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;477,00000000000000;44;FALSE
+vehicle;Personal business;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;F;477,00000000000000;43;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;58,00000000000000;63;FALSE
+vehicle;Other;Y;Dry;Other;N;NL;Uphill;N;Heading straight;M;273,00000000000000;59;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;280,00000000000000;51;TRUE
+vehicle;Commute;Y;Dry;No obstructions;Y;NL;Flat;Y;Other;F;219,00000000000000;51;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Uphill;Y;Heading straight;M;50,00000000000000;27;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;345,00000000000000;25;TRUE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;N;Heading straight;F;151,00000000000000;58;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;47,00000000000000;57;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;F;135,00000000000000;57;FALSE
+Other;Commute;Y;Other;No obstructions;Y;YL;Downhill;Y;Heading straight;F;139,00000000000000;44;TRUE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;169,00000000000000;37;FALSE
+Other;Commute;Y;Other;No obstructions;N;YL;Flat;N;Heading straight;F;278,00000000000000;31;FALSE
+Other;Commute;Y;Dry;Other;N;YL;Flat;Y;Heading straight;M;58,00000000000000;37;TRUE
+Other;Commute;Y;Dry;Other;N;YL;Flat;Y;Heading straight;M;58,00000000000000;40;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;NL;Flat;N;Heading straight;M;58,00000000000000;34;FALSE
+vehicle;Other;N;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;79,50000000000000;34;FALSE
+vehicle;Commute;Y;Dry;Other;Y;YL;Downhill;N;Heading straight;F;79,00000000000000;51;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;F;60,00000000000000;31;FALSE
+Other;Personal business;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;F;395,00000000000000;64;TRUE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;Other;141,00000000000000;50;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;117,00000000000000;40;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;Y;NL;Flat;Y;Heading straight;F;147,40000000000001;47;FALSE
+Other;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Other;M;235,00000000000000;65;TRUE
+Other;Personal business;Y;Dry;No obstructions;N;NL;Flat;Y;Other;M;235,00000000000000;65;TRUE
+vehicle;Other;Y;Dry;No obstructions;Y;NL;Flat;Y;Heading straight;M;160,00000000000000;27;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Uphill;Y;Heading straight;M;88,33333333333333;32;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;50,00000000000000;52;TRUE
+vehicle;Other;Y;Other;No obstructions;Y;NL;Flat;Y;Heading straight;M;130,00000000000000;27;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Downhill;Y;Heading straight;M;235,00000000000000;27;FALSE
+Other;Commute;Y;Other;No obstructions;Y;YL;Flat;Y;Heading straight;F;377,00000000000000;38;TRUE
+Other;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Other;F;137,00000000000000;41;TRUE
+Other;Other;Y;Other;No obstructions;N;NL;Downhill;Y;Other;M;318,00000000000000;27;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;42,40000000000000;25;FALSE
+Other;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Other;M;522,00000000000000;27;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Uphill;Y;Heading straight;F;186,00000000000000;66;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;515,00000000000000;50;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Flat;N;Heading straight;F;564,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;564,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;521,00000000000000;41;FALSE
+vehicle;Personal business;Y;Other;No obstructions;N;YL;Flat;N;Heading straight;F;73,00000000000000;51;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;M;60,00000000000000;36;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;57,88888888888889;27;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;111,00000000000000;38;FALSE
+vehicle;Commute;Y;Other;No obstructions;Y;YL;Flat;Y;Heading straight;F;40,00000000000000;54;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;170,00000000000000;44;FALSE
+vehicle;Personal business;Y;Other;No obstructions;Y;YL;Downhill;N;Heading straight;M;225,00000000000000;44;TRUE
+vehicle;Personal business;Y;Other;No obstructions;Y;NL;Downhill;Y;Heading straight;F;66,00000000000000;22;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;98,00000000000000;23;FALSE
+vehicle;Commute;N;Dry;No obstructions;N;YL;Flat;Y;Other;M;469,00000000000000;51;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;146,00000000000000;43;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Downhill;Y;Heading straight;M;146,00000000000000;32;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;668,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;Other;Y;NL;Uphill;Y;Other;F;304,00000000000000;41;FALSE
+Other;Other;Y;Other;Other;N;YL;Flat;N;Heading straight;F;307,00000000000000;48;TRUE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;470,00000000000000;56;FALSE
+vehicle;Commute;Y;Dry;Other;Y;YL;Uphill;N;Heading straight;F;194,00000000000000;31;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;277,00000000000000;42;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Downhill;Y;Heading straight;M;67,00000000000000;37;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;22,00000000000000;32;FALSE
+Other;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;F;64,59999999999999;32;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;Y;YL;Flat;N;Heading straight;M;291,00000000000000;59;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;M;279,00000000000000;28;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;Other;233,00000000000000;48;TRUE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;N;Heading straight;F;650,00000000000000;32;FALSE
+Other;Commute;Y;Dry;No obstructions;N;NL;Downhill;N;Heading straight;M;5,00000000000000;40;FALSE
+Other;Other;Y;Dry;No obstructions;N;NL;Flat;N;Heading straight;F;146,00000000000000;75;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;89,00000000000000;33;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;19,42857142857143;33;FALSE
+vehicle;Commute;N;Other;Other;N;YL;Flat;Y;Heading straight;M;741,00000000000000;47;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;231,00000000000000;15;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;80,00000000000000;36;TRUE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Downhill;Y;Other;Other;159,00000000000000;36;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;118,14285714285714;39;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;96,00000000000000;29;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;180,00000000000000;71;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;N;Heading straight;M;332,00000000000000;39;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;18,00000000000000;45;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;994,00000000000000;38;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Uphill;N;Heading straight;F;285,00000000000000;39;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;M;126,00000000000000;37;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;190,00000000000000;43;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;384,00000000000000;51;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;51,00000000000000;38;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;16,00000000000000;42;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;16,00000000000000;40;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;N;Heading straight;M;16,00000000000000;42;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;24,00000000000000;45;FALSE
+Other;Commute;Y;Dry;Other;N;YL;Uphill;N;Heading straight;M;5,00000000000000;40;FALSE
+Other;Commute;Y;Dry;Other;N;NL;Flat;N;Other;F;419,00000000000000;40;FALSE
+vehicle;Commute;Y;Dry;Other;Y;YL;Downhill;Y;Heading straight;M;8,71428571428571;38;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Uphill;Y;Heading straight;F;293,00000000000000;38;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Flat;N;Heading straight;M;279,00000000000000;38;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;NL;Downhill;N;Heading straight;M;49,00000000000000;63;TRUE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Uphill;Y;Heading straight;F;86,00000000000000;36;FALSE
+vehicle;Commute;Y;Dry;Other;Y;YL;Downhill;Y;Heading straight;F;47,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Other;M;343,00000000000000;38;FALSE
+vehicle;Personal business;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;F;565,00000000000000;38;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Downhill;Y;Other;F;1176,00000000000000;39;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;NL;Flat;Y;Heading straight;F;134,00000000000000;42;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;857,00000000000000;34;FALSE
+Other;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;939,00000000000000;39;FALSE
+Other;Other;N;Dry;Other;N;NL;Flat;Y;Heading straight;M;217,50000000000000;32;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;197,00000000000000;61;FALSE
+vehicle;Other;N;Other;No obstructions;N;YL;Flat;Y;Heading straight;M;217,00000000000000;31;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;732,00000000000000;55;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;F;732,00000000000000;69;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;94,16666666666667;58;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;5,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;5,00000000000000;40;FALSE
+vehicle;Personal business;N;Dry;No obstructions;N;NL;Flat;N;Heading straight;M;94,16666666666667;35;FALSE
+vehicle;Commute;Y;Other;Other;Y;YL;Flat;N;Heading straight;M;299,00000000000000;37;FALSE
+vehicle;Personal business;N;Dry;No obstructions;Y;NL;Uphill;N;Heading straight;M;208,00000000000000;36;FALSE
+vehicle;Commute;Y;Other;Other;N;YL;Flat;Y;Heading straight;F;19,16666666666667;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Other;M;199,75000000000000;55;FALSE
+vehicle;Commute;N;Other;No obstructions;Y;YL;Flat;Y;Heading straight;M;101,00000000000000;32;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;336,00000000000000;40;FALSE
+Other;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;253,33333333333334;46;FALSE
+Other;Commute;Y;Other;No obstructions;Y;YL;Flat;Y;Heading straight;M;177,00000000000000;41;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;71,75000000000000;31;TRUE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;M;66,00000000000000;39;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;13,00000000000000;40;TRUE
+Other;Personal business;N;Dry;Other;N;NL;Downhill;N;Other;M;71,75000000000000;31;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Other;M;25,00000000000000;48;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Flat;Y;Heading straight;M;1,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Flat;Y;Heading straight;M;19,16666666666667;41;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;Y;YL;Flat;N;Other;M;52,00000000000000;32;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;M;61,00000000000000;40;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Flat;N;Heading straight;M;361,66666666666669;40;FALSE
+vehicle;Commute;Y;Dry;Other;Y;YL;Downhill;Y;Heading straight;M;232,00000000000000;55;FALSE
+vehicle;Other;Y;Other;No obstructions;N;YL;Downhill;Y;Heading straight;F;258,00000000000000;33;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Uphill;Y;Heading straight;F;20,00000000000000;38;FALSE
+vehicle;Personal business;N;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;142,66666666666666;36;FALSE
+vehicle;Other;N;Dry;No obstructions;Y;NL;Downhill;Y;Heading straight;M;25,00000000000000;34;FALSE
+vehicle;Other;N;Dry;Other;N;NL;Downhill;Y;Heading straight;M;178,66666666666666;31;FALSE
+vehicle;Personal business;N;Other;No obstructions;N;YL;Downhill;Y;Heading straight;M;178,66666666666666;31;FALSE
+vehicle;Other;N;Dry;No obstructions;Y;YL;Flat;N;Heading straight;M;236,00000000000000;32;FALSE
+vehicle;Personal business;N;Other;No obstructions;N;YL;Uphill;Y;Other;M;91,00000000000000;31;FALSE
+vehicle;Personal business;Y;Other;No obstructions;N;YL;Flat;Y;Other;F;125,00000000000000;28;TRUE
+Other;Other;Y;Dry;Other;N;NL;Uphill;N;Heading straight;M;10,00000000000000;40;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;28,00000000000000;43;TRUE
+vehicle;Other;Y;Dry;No obstructions;Y;NL;Flat;Y;Heading straight;M;615,00000000000000;65;TRUE
+Other;Commute;Y;Other;No obstructions;N;YL;Flat;N;Heading straight;F;714,00000000000000;42;FALSE
+vehicle;Other;Y;Dry;Other;N;NL;Downhill;N;Heading straight;M;74,00000000000000;62;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Uphill;Y;Heading straight;F;90,00000000000000;36;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Other;M;412,00000000000000;35;TRUE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;N;Heading straight;M;342,00000000000000;42;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;387,00000000000000;40;TRUE
+vehicle;Personal business;Y;Other;No obstructions;N;YL;Downhill;N;Heading straight;M;387,00000000000000;32;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;15,00000000000000;47;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Uphill;N;Heading straight;M;352,00000000000000;36;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;192,66666666666666;56;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;46,00000000000000;56;FALSE
+vehicle;Personal business;Y;Other;No obstructions;N;NL;Downhill;N;Heading straight;F;425,00000000000000;51;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;NL;Uphill;N;Heading straight;M;468,00000000000000;36;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Downhill;Y;Heading straight;M;697,00000000000000;27;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Downhill;Y;Heading straight;M;140,00000000000000;27;FALSE
+Other;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;778,00000000000000;48;TRUE
+Other;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Other;F;120,00000000000000;39;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;404,00000000000000;41;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;22,00000000000000;49;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Flat;Y;Heading straight;F;404,00000000000000;41;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;16,00000000000000;76;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Downhill;N;Heading straight;F;16,00000000000000;57;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;123,00000000000000;75;TRUE
+vehicle;Personal business;Y;Dry;Other;Y;NL;Uphill;N;Heading straight;F;437,00000000000000;58;FALSE
+Other;Other;Y;Other;Other;N;YL;Flat;N;Heading straight;M;250,00000000000000;51;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;20,00000000000000;40;FALSE
+vehicle;Other;Y;Dry;Other;N;NL;Downhill;Y;Other;F;578,00000000000000;72;FALSE
+vehicle;Personal business;Y;Dry;Other;N;YL;Uphill;Y;Other;F;430,00000000000000;42;FALSE
+Other;Commute;Y;Dry;No obstructions;N;YL;Downhill;N;Heading straight;F;545,00000000000000;39;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Downhill;N;Heading straight;F;430,00000000000000;40;FALSE
+vehicle;Personal business;Y;Dry;Other;N;YL;Downhill;N;Other;F;430,00000000000000;41;FALSE
+vehicle;Personal business;Y;Dry;Other;N;YL;Uphill;N;Heading straight;F;138,00000000000000;40;FALSE
+vehicle;Other;Y;Dry;Other;N;YL;Uphill;N;Heading straight;M;430,00000000000000;61;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Downhill;N;Heading straight;F;430,00000000000000;40;FALSE
+vehicle;Other;Y;Dry;Other;N;YL;Uphill;N;Heading straight;F;323,00000000000000;40;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;41,00000000000000;43;FALSE
+vehicle;Other;Y;Dry;Other;N;YL;Flat;N;Heading straight;F;41,00000000000000;43;FALSE
+vehicle;Commute;Y;Dry;Other;Y;YL;Flat;Y;Heading straight;F;463,00000000000000;43;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;17,00000000000000;28;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;138,00000000000000;40;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Uphill;N;Heading straight;F;147,00000000000000;41;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Uphill;N;Heading straight;M;147,00000000000000;32;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;233,00000000000000;43;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Uphill;N;Heading straight;M;5,00000000000000;27;FALSE
+vehicle;Other;Y;Dry;Other;Y;YL;Flat;N;Heading straight;F;174,00000000000000;43;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;73,00000000000000;43;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;30,00000000000000;37;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Other;F;76,59999999999999;56;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;275,00000000000000;37;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Downhill;Y;Heading straight;F;211,50000000000000;48;FALSE
+Other;Commute;Y;Other;No obstructions;N;YL;Flat;N;Heading straight;F;205,00000000000000;41;FALSE
+vehicle;Other;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;F;5,00000000000000;77;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;M;222,00000000000000;25;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Downhill;N;Heading straight;F;640,00000000000000;31;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Downhill;Y;Heading straight;M;110,00000000000000;48;TRUE
+vehicle;Other;N;Dry;No obstructions;N;NL;Uphill;N;Heading straight;M;46,00000000000000;34;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;F;67,00000000000000;29;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;NL;Flat;Y;Heading straight;F;71,00000000000000;48;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;190,00000000000000;46;FALSE
+vehicle;Other;N;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;445,00000000000000;34;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;F;103,00000000000000;29;FALSE
+vehicle;Personal business;N;Dry;No obstructions;N;NL;Flat;N;Heading straight;M;86,66666666666667;31;FALSE
+vehicle;Commute;N;Dry;Other;N;YL;Flat;Y;Heading straight;M;86,66666666666667;32;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;232,00000000000000;38;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;140,00000000000000;52;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;51,00000000000000;39;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Uphill;N;Heading straight;M;252,00000000000000;52;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;51,00000000000000;39;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;F;140,00000000000000;31;TRUE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Uphill;Y;Heading straight;M;776,00000000000000;43;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;1,00000000000000;40;FALSE
+Other;Personal business;N;Other;No obstructions;N;YL;Downhill;N;Heading straight;M;10,00000000000000;33;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Uphill;N;Heading straight;M;5,00000000000000;56;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;NL;Downhill;N;Heading straight;M;264,00000000000000;36;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Uphill;N;Heading straight;M;15,00000000000000;36;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;15,00000000000000;36;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;NL;Flat;N;Heading straight;M;1,00000000000000;36;TRUE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;F;386,00000000000000;48;FALSE
+vehicle;Commute;Y;Other;Other;N;YL;Downhill;Y;Heading straight;M;130,00000000000000;33;TRUE
+vehicle;Other;N;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;597,00000000000000;34;FALSE
+vehicle;Personal business;N;Dry;No obstructions;Y;NL;Flat;Y;Heading straight;M;29,66666666666667;36;FALSE
+vehicle;Personal business;N;Dry;No obstructions;N;NL;Downhill;Y;Heading straight;M;277,19999999999999;34;FALSE
+vehicle;Personal business;N;Dry;No obstructions;N;NL;Flat;Y;Heading straight;M;1,00000000000000;35;FALSE
+vehicle;Other;N;Dry;No obstructions;Y;YL;Flat;N;Heading straight;M;1,66666666666667;33;FALSE
+vehicle;Other;N;Dry;No obstructions;N;YL;Uphill;N;Heading straight;M;42,00000000000000;32;FALSE
+vehicle;Commute;N;Dry;Other;Y;NL;Flat;N;Heading straight;M;100,00000000000000;32;TRUE
+vehicle;Other;N;Dry;No obstructions;Y;NL;Flat;Y;Heading straight;M;513,00000000000000;31;FALSE
+vehicle;Personal business;N;Dry;No obstructions;Y;NL;Flat;N;Heading straight;M;134,00000000000000;34;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;Other;158,00000000000000;36;FALSE
+vehicle;Other;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;F;150,00000000000000;44;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;724,00000000000000;41;TRUE
+Other;Commute;Y;Dry;No obstructions;N;YL;Downhill;N;Heading straight;F;259,00000000000000;34;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;Y;YL;Flat;N;Heading straight;Other;407,00000000000000;36;TRUE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Uphill;Y;Heading straight;Other;184,00000000000000;36;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;Y;YL;Downhill;Y;Other;Other;100,00000000000000;37;TRUE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;37,00000000000000;46;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;441,00000000000000;41;FALSE
+vehicle;Other;Y;Dry;Other;N;NL;Uphill;Y;Other;M;370,00000000000000;63;TRUE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Uphill;N;Heading straight;F;206,00000000000000;76;FALSE
+vehicle;Commute;Y;Dry;Other;N;NL;Flat;N;Heading straight;F;5,00000000000000;27;FALSE
+vehicle;Personal business;N;Dry;No obstructions;Y;YL;Flat;N;Heading straight;M;161,00000000000000;56;FALSE
+vehicle;Personal business;N;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;396,00000000000000;56;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;21,00000000000000;49;FALSE
+vehicle;Personal business;N;Dry;No obstructions;Y;YL;Uphill;N;Heading straight;M;564,00000000000000;56;FALSE
+vehicle;Personal business;N;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;166,00000000000000;56;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;570,00000000000000;44;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;381,00000000000000;59;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;NL;Flat;N;Heading straight;M;117,00000000000000;48;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;117,00000000000000;41;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;10,00000000000000;41;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Other;F;205,00000000000000;46;TRUE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Uphill;Y;Heading straight;M;898,00000000000000;58;FALSE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Downhill;N;Heading straight;M;68,00000000000000;40;TRUE
+vehicle;Commute;Y;Dry;Other;N;YL;Flat;Y;Other;M;21,80000000000000;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;74,00000000000000;48;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;F;19,00000000000000;51;FALSE
+vehicle;Commute;Y;Other;No obstructions;Y;YL;Flat;Y;Other;F;72,00000000000000;38;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;M;1,25000000000000;42;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;N;Heading straight;M;1,25000000000000;42;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;Y;NL;Flat;N;Heading straight;F;1,42857142857143;62;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;2,50000000000000;38;TRUE
+Other;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;30,00000000000000;39;TRUE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;N;Heading straight;F;47,00000000000000;51;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;NL;Flat;Y;Heading straight;F;5,00000000000000;62;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;10,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;10,00000000000000;56;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;10,00000000000000;41;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;M;10,00000000000000;41;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;F;10,00000000000000;41;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;F;10,00000000000000;31;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;138,00000000000000;42;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;138,00000000000000;40;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Downhill;Y;Heading straight;F;25,00000000000000;39;FALSE
+vehicle;Commute;Y;Other;No obstructions;N;YL;Uphill;Y;Heading straight;F;25,00000000000000;38;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;Y;Other;F;239,00000000000000;39;FALSE
+vehicle;Commute;Y;Other;Other;N;YL;Flat;Y;Heading straight;F;239,00000000000000;31;FALSE
+vehicle;Commute;Y;Other;No obstructions;Y;YL;Flat;Y;Heading straight;F;83,00000000000000;38;FALSE
+vehicle;Commute;Y;Dry;Other;Y;YL;Flat;N;Heading straight;F;60,00000000000000;38;FALSE
+vehicle;Commute;Y;Other;No obstructions;Y;YL;Flat;N;Heading straight;F;197,00000000000000;40;FALSE
+Other;Commute;Y;Dry;No obstructions;N;YL;Uphill;N;Heading straight;F;101,00000000000000;39;FALSE
+Other;Commute;Y;Dry;No obstructions;N;YL;Uphill;N;Heading straight;F;555,00000000000000;39;FALSE
+Other;Commute;Y;Dry;No obstructions;N;YL;Downhill;N;Heading straight;F;555,00000000000000;40;FALSE
+vehicle;Personal business;N;Dry;Other;N;NL;Flat;N;Heading straight;M;266,00000000000000;34;FALSE
+vehicle;Personal business;N;Dry;No obstructions;N;NL;Uphill;N;Heading straight;M;613,57142857142856;32;FALSE
+Other;Other;Y;Dry;Other;N;YL;Flat;Y;Heading straight;M;727,00000000000000;36;FALSE
+vehicle;Commute;Y;Dry;No obstructions;Y;YL;Flat;Y;Heading straight;F;636,00000000000000;39;FALSE
+vehicle;Other;Y;Dry;No obstructions;Y;NL;Flat;Y;Heading straight;F;150,00000000000000;70;TRUE
+vehicle;Other;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;M;115,50000000000000;41;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;108,00000000000000;47;FALSE
+vehicle;Commute;Y;Dry;No obstructions;N;YL;Flat;N;Heading straight;F;56,00000000000000;46;FALSE
+Other;Commute;Y;Other;No obstructions;N;YL;Flat;Y;Heading straight;M;64,00000000000000;53;TRUE
+vehicle;Commute;Y;Dry;Other;Y;NL;Uphill;N;Heading straight;F;47,00000000000000;33;FALSE
+vehicle;Personal business;Y;Dry;No obstructions;N;YL;Flat;Y;Heading straight;F;134,00000000000000;59;FALSE
+vehicle;Commute;Y;Dry;Other;N;YL;Flat;Y;Heading straight;M;5,00000000000000;40;FALSE
+Other;Commute;Y;Other;No obstructions;N;YL;Flat;N;Heading straight;M;280,33333333333331;42;FALSE
+vehicle;Commute;Y;Other;No obstructions;Y;YL;Flat;N;Heading straight;M;140,00000000000000;35;FALSE

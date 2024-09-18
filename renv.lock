@@ -2089,6 +2089,20 @@
       ],
       "Hash": "6dfe8bf774944bd5595785e3229d8771"
     },
+    "nabor": {
+      "Package": "nabor",
+      "Version": "0.5.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "BH",
+        "R",
+        "Rcpp",
+        "RcppEigen",
+        "methods"
+      ],
+      "Hash": "54388cc0cf3dfc0948a4bfbf9e8cceba"
+    },
     "naniar": {
       "Package": "naniar",
       "Version": "1.0.0",
@@ -2150,6 +2164,22 @@
         "utils"
       ],
       "Hash": "2c797b46eea7fb58ede195bc0b1f1138"
+    },
+    "nngeo": {
+      "Package": "nngeo",
+      "Version": "0.4.8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "data.table",
+        "methods",
+        "nabor",
+        "parallel",
+        "sf",
+        "units"
+      ],
+      "Hash": "f0381bcc67712007192a6d93707ddb40"
     },
     "norm": {
       "Package": "norm",

@@ -10,7 +10,14 @@ library(ggplot2)
 library(dplyr)
 ```
 
-## R Markdown
+## Read data
+```{r}
+ebike_prep <- readRDS("../../data/derive/imputed_dataset/202408ebike_prep.rds")
+pedal_prep <- readRDS("../../data/derive/imputed_dataset/202408pedal_prep.rds")
+
+```
+
+
 ```{r data}
 data <- rbind(readxl::read_excel("../data/20240425Canada.xlsx"),readxl::read_excel("../data/20240425United States.xlsx"))
 
@@ -46,35 +53,23 @@ table(cut(date, 'month'))
 
 ```
 
-```{r pressure, echo=FALSE}
+```{r ebike_rate, echo=FALSE}
+# calculate percentage
 data_regroup %>% 
-  filter(ebike=="Yes") %>% 
+  filter(!is.na(ebike)) %>% 
   mutate (report_date = as.Date(report_date, format="%Y-%m-%d")) %>% 
-  mutate (report_year = format(as.Date(report_date),"%Y")) %>% 
+  mutate (report_year = format(as.Date(report_date),"%Y")) %>%
+  group_by(report_year) %>% 
+  summarise(ebike_rate = sum(ebike == "Yes") / n())
+
+# bar chart
+data_regroup %>% 
+  filter(!is.na(ebike)) %>% 
+  mutate (report_date = as.Date(report_date, format="%Y-%m-%d")) %>% 
+  mutate (report_year = format(as.Date(report_date),"%Y")) %>%
   group_by(report_year) %>% 
   ggplot(aes(x=report_year,fill=ebike)) +
   geom_bar(position="fill")
-
-
-  ggplot(aes(report_year)) + geom_bar()
-  
-data_regroup %>% 
-  mutate (report_date = as.Date(report_date, format="%Y-%m-%d")) %>% 
-  mutate (report_year = format(as.Date(report_date),"%Y")) %>% 
-  group_by(report_year) %>% 
-  ggplot(aes(x=report_year,fill=ebike)) +
-  geom_bar(position="fill")
-
-countByMonth$report_month <- factor(countByMonth$report_month, levels = unique(countByMonth$report_month))
-
-data_regroup %>% 
-  mutate (report_date = as.Date(report_date, format="%Y-%m-%d")) %>% 
-  mutate (report_year = format(as.Date(report_date),"%Y")) %>% 
-  group_by(report_year) %>% 
-  ggplot(aes(x=report_year,fill=ebike)) +
-  geom_bar()
-
-
 ```
 ```{r p_type}
 data_regroup %>% 
@@ -149,17 +144,16 @@ datasummary_crosstab(ebike ~ age_group,
             data=data_prep,
             statistic = 1 ~ N + Percent("row"))
 
-
-
 require(ggplot2)
 require(reshape2)
-p <- ggplot(data = data_prep, aes(x=age_imp)) + 
-  geom_density(aes(fill=ebike), alpha = 0.4) +
-  facet_wrap(~injury2)
-
-p + 
-  scale_fill_brewer(palette = "Paired") +
-  theme_classic()
+data_prep %>% 
+  mutate(injury2 = as.factor(injury2)) %>% 
+  mutate(injury2 = fct_recode(injury2, "Injured" = "TRUE", "Not injured" = "FALSE")) %>% 
+  ggplot(aes(x=age_imp)) + 
+    geom_density(aes(fill=ebike), alpha = 0.4) +
+    facet_wrap(~injury2) + 
+    scale_fill_brewer(palette = "Paired") +
+    theme_classic()
 
 ```
 

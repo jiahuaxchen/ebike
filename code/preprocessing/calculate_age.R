@@ -26,14 +26,14 @@ calculate_age <- function(data){
   df_age <- df_age %>% 
     mutate(age_group = case_when(
       age_imp <= 12            ~ "0-12",
-      age_imp > 13 & age_imp <= 17 ~ "13-17",
-      age_imp > 18 & age_imp <= 24 ~ "18-24",
-      age_imp > 25 & age_imp <= 34 ~ "25-34",
-      age_imp > 35 & age_imp <= 44 ~ "35-44",
-      age_imp > 45 & age_imp <= 54 ~ "45-54",
-      age_imp > 55 & age_imp <= 64 ~ "55-64",
-      age_imp > 65 & age_imp <= 74 ~ "65-74",
-      age_imp > 75            ~ "75+"
+      age_imp > 12 & age_imp <= 17 ~ "13-17",
+      age_imp > 17 & age_imp <= 24 ~ "18-24",
+      age_imp > 24 & age_imp <= 34 ~ "25-34",
+      age_imp > 34 & age_imp <= 44 ~ "35-44",
+      age_imp > 44 & age_imp <= 54 ~ "45-54",
+      age_imp > 54 & age_imp <= 64 ~ "55-64",
+      age_imp > 64 & age_imp <= 74 ~ "65-74",
+      age_imp > 74            ~ "75+"
     ),
     age_group = as.factor(age_group)) %>% 
     mutate(age_group=fct_relevel(age_group,c("0-12","13-17","18-24","25-34","35-44","45-54","55-64","65-74","75+")))

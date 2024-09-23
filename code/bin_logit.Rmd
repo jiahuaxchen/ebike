@@ -70,8 +70,11 @@ data_prep <- data_regroup %>%
 ### NAs
 ```{r}
 data_prep %>% 
-  filter(ebike=="No") %>% 
+  select(-regular_cyclist) %>% 
   gg_miss_upset()
+
+data_prep %>% 
+  vis_miss()
 # a lot missing intersection so we will remove that variable
 ```
 
@@ -325,3 +328,49 @@ coef_wt_samples <- posterior_samples[, "ebikeYes"]
 # Calculate the probability that the coefficient for 'wt' is less than 0
 prob_less_than_zero <- mean(coef_wt_samples < 0)
 ```
+
+## Interaction model
+```{r}
+data_all <- data_prep %>% 
+  filter(!(is.na(intersection) & 
+           is.na(cars_on_roadside) & 
+           is.na(helmet) & 
+           is.na(gender) & 
+           is.na(age_imp)))
+```
+
+```{r}
+set.seed(123)
+data_recipe_all <- recipe(injury2 ~ . , data = data_all) %>%
+  step_impute_bag(-c(regular_cyclist,bicycle_type,injury2))
+
+all_imputed <- prep(data_recipe_all) %>% bake(new_data = data_prep)
+
+all_prep <- all_imputed %>% 
+  select(-c(i_type, regular_cyclist, bicycle_type)) %>% 
+  mutate(across(where(is.factor), ~ fct_lump_min(., min = 0.1 * n())))
+
+summary(all_prep)
+```
+
+```{r}
+interact_model <- stan_glm(injury2 ~ . -pop,
+                        data=all_prep,
+                        family = binomial(link = "logit"),
+                        offset = log(all_prep$pop),
+                        seed = 1208,
+                        refresh=0)
+
+exp(coef(interact_model))
+```
+
+```{r}
+posterior_samples_ebike <- as.array(interact_model)
+
+parameter_names_ebike <- dimnames(posterior_samples_ebike)$parameters
+
+mcmc_intervals(posterior_samples_ebike, pars = parameter_names_ebike) +
+  ggtitle("Posterior Intervals for E-bike incidents injury factors") +
+  theme_classic()
+```
+

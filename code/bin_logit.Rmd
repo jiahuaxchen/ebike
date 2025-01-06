@@ -21,7 +21,7 @@ library(bayesplot)
 tidymodels_prefer()
 ```
 
-## 
+## Read data
 
 ```{r}
 # read data with block population imputation 
@@ -82,7 +82,13 @@ data_prep %>%
 # inspect rows with missing vars
 data_na <- data_prep %>% 
   rowwise() %>%
+  select(-c(regular_cyclist,bicycle_type)) %>% 
   mutate(na_count = sum(is.na(across(everything()))))
+
+data_na %>% 
+  filter (ebike == "Yes") %>% 
+  filter(na_count == 0) %>% 
+  nrow()
 ```
 
 ## Imputation

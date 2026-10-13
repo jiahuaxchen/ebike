@@ -112,6 +112,11 @@ Settings:
 - Keep the same random seed and the same holdout rows across runs A–D so metrics are comparable.
 - **Exposure offset caveat:** AutoML has no `offset(log(pop))` equivalent. Including `log_pop` as a plain predictor is the pragmatic substitute, but coefficients are then *learned*, not fixed at 1 — note this when comparing with the Bayesian logit. For pure injury-severity classification (injured vs. not, conditional on an incident happening), the offset arguably isn't needed at all; decide and document which framing you're using.
 - **Class imbalance:** check injury2 balance per subset; if skewed, prefer AUC/F1 over accuracy (the R RF used upsampling; AutoML algorithms handle imbalance via internal validation, but report the confusion matrix on the holdout).
+- **Geography of the e-bike subset (measured 2025-10-13):** after the study-period filter the source files hold 395 Canadian vs. 89 US e-bike reports (376 vs. 77 after the `personal_involvement == "Yes"` filter) — **~83% of e-bike cases are Canadian**. Consequences:
+  - Run B/D with USA Geodemographic Embeddings is **not viable as a standalone e-bike model** (n≈77). Use those embeddings only for the pedal/all-bike US models, or for the pooled model restricted to US rows.
+  - For geography-aware e-bike modeling, prefer (i) the **Global Location Encoder (Sentinel-2)** pretrained location-embedding model (global coverage, works for Canada) via Generate Embeddings Using AI Models, or (ii) a manual join of Statistics Canada census-profile variables (the repo already has `data/CanadaPop/`) as plain covariates.
+  - **Text embeddings (run C) are geography-agnostic** and remain the primary embedding track for the e-bike analysis.
+- **Overfitting control (small n vs. embedding width):** the pretrained encoders are frozen, so the risk lives entirely in the downstream classifier. Reduce the extracted text-embedding fields with **PCA to ~20–50 components** before AutoML (keep the PCA fitted on training folds only); prefer the pooled model (n≈2–3k) with an `ebike` flag over the e-bike-only model when embeddings are included; judge embedding lift on repeated train/test splits, not a single holdout, since one 20% holdout of 343 rows (~69 cases) gives AUC estimates with wide uncertainty.
 
 ---
 
@@ -142,7 +147,7 @@ Settings:
 
 | Risk | Mitigation |
 |---|---|
-| USA Geodemographic Embeddings exclude Canada (~large share of BikeMaps reports, esp. Victoria BC) | Run location-embedding models on US subset; report both; consider Canadian census join as plain covariates |
+| USA Geodemographic Embeddings exclude Canada — **~83% of e-bike cases (376/453) are Canadian**, so a US-only e-bike location-embedding model has n≈77 | Use geodemographic embeddings only for pedal/all-bike US models; for e-bike geography use the Global Location Encoder (Sentinel-2) pretrained model (global) or StatCan census joins; lean on text embeddings as the main e-bike track |
 | Small n (e-bike ≈ 343) vs. 384–640 embedding dims → overfitting | Rely on AutoML internal CV + strict external holdout; consider PCA on extracted embedding fields (keep ~20–50 components) before training |
 | Pro 3.7 / Advanced license / DL libraries availability | Verify in Phase 0 before committing; AutoML-only fallback works on 3.5+ |
 | No offset term in AutoML | `log_pop` as predictor + documented framing decision (§5) |

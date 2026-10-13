@@ -43,9 +43,17 @@ Everything below lives in the **GeoAI toolbox** in ArcGIS Pro.
 
 - **Train Using AutoML** / **Predict Using AutoML** — tabular classification/regression; the **Use Location Embeddings** option joins Esri's **USA Geodemographic Embeddings** (256-dim vectors per H3 resolution-7 hexagon, learned from ~5,300 census/ACS/housing/environment variables) to each point as extra predictors. Basic mode produces feature-importance and SHAP reports.
 
+**Verified availability (checked against Esri docs, 2026-10):**
+
+- The Embeddings Based Analysis toolset is **new at Pro 3.7** (GeoAI toolbox history: Generate Embeddings Using AI Models, Extract Embedding To Fields, Find Similar Features Using Embeddings, Merge Embeddings, Predict Missing Values Using AI Model all list 3.7 as "new at this version"). None of it exists in 3.5/3.6.
+- All GeoAI tools are geoprocessing tools and therefore **scriptable via `arcpy.geoai`** (e.g. `arcpy.geoai.GenerateEmbeddingsUsingAIModels(in_data, out_fc, in_model_definition_file, {arguments})`). Unconfirmed: whether the Train Using AutoML "Use Location Embeddings" checkbox has an arcpy keyword — verify with `help(arcpy.geoai.TrainUsingAutoML)` in a 3.7 install (the MVP smoke test does this).
+- Pretrained models (ArcGIS AI models, June 2026 release): **HF Text Feature Extraction** (sentence-transformers text embeddings) and **Global Location Encoder (Sentinel-2)** (SatCLIP-based, coordinates → embeddings, global land coverage incl. Canada, needs ≥8 GB GPU). Both are Living Atlas .dlpk items consumed by Generate Embeddings Using AI Models.
+- Output embeddings must live in a **geodatabase** (BLOB field `Embedding`); shapefiles/GeoPackage not supported.
+- The "Use Location Embeddings" AutoML option is documented in the current (3.7) tool page and absent at 3.3; which encoder it uses (US-only geodemographic vs. global) is not stated — test on a Canadian point before relying on it (MVP step 6/7 settles this empirically).
+
 **Requirements checklist (Phase 0):**
 
-- [ ] ArcGIS Pro **3.7** (3.5+ suffices for AutoML-only work; the Embeddings toolset needs 3.7)
+- [ ] ArcGIS Pro **3.7** (3.5+ suffices for AutoML-only work; the Embeddings toolset needs 3.7) — or an **ArcGIS Online Notebooks** Advanced-with-GPU runtime at 3.7, which removes the local-install dependency entirely (see `code/arcgis/README.md`)
 - [ ] **Advanced** license (location/text embeddings); Image Analyst **not** needed (no imagery)
 - [ ] **Deep Learning Libraries** installer matching the Pro version
 - [ ] GPU recommended (CPU works for text embeddings at this data size: ~5,900 short narratives)

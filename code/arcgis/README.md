@@ -39,12 +39,21 @@ script. Requires Advanced license + Deep Learning Libraries.
 | 6 | Generate Embeddings (Global Location Encoder) | **Canadian** points get location embeddings (the key coverage question) |
 | 7 | Train Using AutoML | Classifier trains on embedding predictors; also reports whether the location-embeddings option is exposed in the arcpy signature |
 
-## Known uncertainties the script handles
+## Confirmed on Pro 3.7.1 (first run, 2026-10)
 
-- Exact arcpy names of the new 3.7 tools: resolved at runtime from
-  `arcpy.ListTools` instead of hard-coding.
-- Model-argument names inside the .dlpk (e.g. `text_field`): if step 3
-  errors on an argument, open the package's `.emd` to see expected keys.
+- Steps 0-3 PASS: text embeddings of `details` work **on CPU** with the
+  ArcInfo (Advanced) license — the plan's core capability is proven.
+- Real signatures (from arcpy/geoai.py): `ExtractEmbeddingToFields(in_features,
+  out_features, embedding_field, output_field_prefix)`;
+  `FindSimilarFeaturesUsingEmbeddings(embedding_features, query_features,
+  out_embeddings_feature_class, threshold)` with threshold a 0-1 cosine
+  similarity and query features not accepted from `in_memory`. The script
+  now uses these.
+- The Global Location Encoder dlpk hard-codes `.cuda()` (no CPU fallback,
+  ignores processor-type settings — worth filing as Esri product feedback).
+  On CPU-only machines the script now auto-extracts the dlpk, rewrites the
+  device calls, and runs the patched `.emd`; the encoder is a small
+  coordinate network, so CPU is fast at this scale.
 - Whether "Use Location Embeddings" is scriptable in
   `arcpy.geoai.TrainUsingAutoML`: step 7 prints what the installed
   signature says.

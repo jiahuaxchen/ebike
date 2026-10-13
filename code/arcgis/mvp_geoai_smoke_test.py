@@ -139,7 +139,9 @@ def extract_fields(geoai_tools, emb_fc):
     import arcpy
     tool = find_tool(geoai_tools, "Extract", "Embedding")
     out_fc = emb_fc + "_flat"
-    tool(emb_fc, out_fc)
+    # Signature (confirmed on 3.7.1): in_features, out_features,
+    # embedding_field, output_field_prefix.
+    tool(emb_fc, out_fc, "Embedding", "emb")
     emb_cols = [f.name for f in arcpy.ListFields(out_fc) if "emb" in f.name.lower()
                 and f.type in ("Double", "Single")]
     print(f"{len(emb_cols)} numeric embedding columns (e.g. {emb_cols[:3]})")
@@ -152,23 +154,54 @@ def extract_fields(geoai_tools, emb_fc):
 def similarity(geoai_tools, emb_fc):
     import arcpy
     tool = find_tool(geoai_tools, "FindSimilar", "Embedding")
-    seed = "in_memory/seed"
+    # The tool rejects in_memory query features; keep the seed in the gdb.
+    seed = emb_fc + "_seed"
     arcpy.analysis.Select(emb_fc, seed, "injured = 'True'")
+    print("Seed features:", arcpy.management.GetCount(seed)[0])
     out = emb_fc + "_similar"
-    # Signature per docs: input features, seed/query features, output, count.
-    # If the positional order errors, check tool.__doc__ at runtime.
-    tool(emb_fc, seed, out, 5)
-    print("Similar features:", arcpy.management.GetCount(out)[0])
+    # Signature (confirmed on 3.7.1): embedding_features, query_features,
+    # out_embeddings_feature_class, threshold (cosine similarity, 0-1).
+    tool(emb_fc, seed, out, 0.5)
+    print("Similar features at threshold 0.5:", arcpy.management.GetCount(out)[0])
     return out
+
+
+def cpu_patch_dlpk(model_path):
+    """The Global Location Encoder dlpk hard-codes .cuda(); on a CPU-only
+    machine, extract it and rewrite the device calls, then return the .emd.
+    The encoder is a small coordinate network, so CPU inference is fast."""
+    import glob
+    import zipfile
+    out_dir = os.path.join(os.path.dirname(model_path), "LocationEncoder_cpu")
+    if not os.path.isdir(out_dir):
+        with zipfile.ZipFile(model_path) as z:  # a .dlpk is a zip archive
+            z.extractall(out_dir)
+        for py in glob.glob(os.path.join(out_dir, "**", "*.py"), recursive=True):
+            with open(py, encoding="utf-8") as f:
+                src = f.read()
+            patched = (src.replace(".cuda()", ".cpu()")
+                          .replace('"cuda"', '"cpu"')
+                          .replace("'cuda'", "'cpu'"))
+            if patched != src:
+                with open(py, "w", encoding="utf-8") as f:
+                    f.write(patched)
+                print("CPU-patched:", os.path.basename(py))
+    emds = glob.glob(os.path.join(out_dir, "**", "*.emd"), recursive=True)
+    assert emds, "no .emd found inside the extracted dlpk"
+    return emds[0]
 
 
 # ---------------------------------------------------------------- step 6
 @step("6. Location embeddings, global encoder (CA+US coverage)")
 def location_embeddings(geoai_tools, fc, model_path):
     import arcpy
+    import torch
     tool = find_tool(geoai_tools, "GenerateEmbeddings")
     out_fc = fc + "_locemb"
-    tool(fc, out_fc, model_path)  # GPU with >=8GB recommended
+    if not torch.cuda.is_available():
+        print("No CUDA GPU: patching the dlpk for CPU inference.")
+        model_path = cpu_patch_dlpk(model_path)
+    tool(fc, out_fc, model_path)
     # The decisive check: Canadian rows must have non-null embeddings.
     n_ca = 0
     with arcpy.da.SearchCursor(out_fc, ["country", "Embedding"]) as cur:

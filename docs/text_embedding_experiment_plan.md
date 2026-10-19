@@ -1,140 +1,154 @@
-# Experiment Plan: Incident Typologies (US+Canada) + Injury Prediction with Embeddings (US)
+# Experiment Plan: Typologies, E-bike Severity, and Embedding Ablation
 
-**Scope (revised 2026-10 after the MVP run and fresh data pulls):** two studies with
-deliberately different geographies, because the embedding families have different
-coverage. **Study 1 (typology)** clusters masked narratives on the **pooled
-US+Canada** corpus — the biggest sample, and the only route to e-bike conclusions
-(e-bike-only clustering fails at n≈150–450: the 400-row MVP had silhouettes ≈0.10
-and HDBSCAN returned 100% noise). **Study 2 (prediction)** is **US-only**, because
-the USA Geodemographic Embeddings cover only the US; it tests text and
-census-context embeddings in an ablation (A/C/G/CG). One embedding family per
-question; the Sentinel-2 location encoder is dropped for US-only work (strictly
-dominated by the census embeddings there) and remains only as the Canada substitute
-if cross-border geography is ever needed. Decisions are pre-registered here so
-results can't be cherry-picked later.
+**Status (2026-10-19):** Study 1 (typology) has been executed on the full corpus —
+its results are recorded below and feed Study 2. **Study 2 (e-bike severity) is now
+the centerpiece**: the answerable, policy-relevant e-bike question, designed around
+the estimand rather than the tooling. Study 3 (US-only prediction ablation) is the
+Esri-facing methods demonstration. Decisions are pre-registered; executed parts are
+marked with their actual results.
 
-**Data: the fresh 2026-10 pulls** (US: 2,059 mainland reports, 153 e-bike; Canada:
-rerun of the state/province-tiled extractor). Cleaning additions since the first
-draft:
+**The estimand discipline (drives everything):** there are three e-bike questions.
+*Do e-bikes crash more?* — unanswerable here (no exposure denominator); nothing may
+imply it. *Do e-bikes crash differently?* — answered by Study 1: **no** (composition
+null, below). *Given the same crash, does an e-bike end worse?* — answerable, and
+Study 2's subject.
 
-- Clamp dates to ≤ today (one US report is dated 2916).
-- Filter non-English narratives (MiniLM is English-centric; the MVP found French
-  reports polluting clusters): keep rows where ≥2 of {the, and, was, with, to}
-  appear, or use a langdetect pass.
+**Data:** fresh 2026-10 pulls via the state/province-tiled extractor (full-feed
+endpoint 502s). Cleaning: date clamp (≤ today), French-narrative drop (~1.2%,
+detected by French-stopword heuristic — an English-stopword test false-flags terse
+English), outcome-word masking (lexicon below). Analyzed corpus: **4,397 masked
+English narratives, ~17.5% e-bike (~770)**.
 
-**Shared leakage control (both studies use the masked text).** Measured fact: 30%
-of injured riders' narratives contain outcome vocabulary vs 5.9% of non-injured;
-P(injured | outcome word) = 51% vs a 17% base rate. `details_masked` deletes every
-sentence matching the frozen lexicon `injur*, hospital*, doctor, ambulance,
-paramedic, brok*, fractur*, pain*, bruis*, stitch*, concuss*, emergency, x-ray,
-sprain*, bleed*, blood, scrape*, road rash, wound*, surgery, clinic, ER`
-(case-insensitive; extend only by reading narratives, never from cluster or model
-results). Masking matters even more in Study 1 than Study 2: the typologies are
-validated against injury rates, so unmasked text would let clusters form around
-outcome descriptions and make that validation circular.
+**Leakage control (both text studies).** Measured: 30% of injured riders' narratives
+contain outcome vocabulary vs 5.9% of non-injured (P(injured | outcome word) = 51%
+vs 17% base). `details_masked` deletes every sentence matching the frozen lexicon
+`injur*, hospital*, doctor, ambulance, paramedic, brok*, fractur*, pain*, bruis*,
+stitch*, concuss*, emergency, x-ray, sprain*, bleed*, blood, scrape*, road rash,
+wound*, surgery, clinic, ER`. Event words (hit, fell, collided) are deliberately
+kept: they describe mechanism, not outcome.
 
 ---
 
-## Study 1 — Incident typologies (pooled US+Canada, masked text)
+## Study 1 — Incident typologies (pooled US+Canada) — EXECUTED
 
-### Question
-What nameable incident mechanisms exist in the narratives, do they carry different
-injury risk, and how do e-bike incidents differ in mechanism mix and
-severity-within-mechanism?
+### Method as run
+Masked narratives → MiniLM 384-d embeddings (CPU) → L2-norm → PCA(15). **Finding:
+the embedding space is a continuum** — HDBSCAN returns 100% noise at n=4,397, so
+typologies cannot be "discovered" as density clusters. Protocol adapted:
+**over-segment with KMeans k=14** (silhouette-chosen k=4 blends mechanisms), read
+every cluster (TF-IDF terms + samples), **merge by hand into 7 nameable
+typologies**. This adaptation is a finding in itself and is reported as such.
 
-### Cohort
-All incidents (US+Canada) with `personal_involvement == "Yes"`, known `ebike`,
-non-missing injury outcome, and an English narrative ≥ 20 characters surviving
-masking. Expected n ≈ 3,800+ on the fresh pulls; e-bike ≈ 550+.
+### Results (2026-10-19 run)
+| Typology | n | Injury rate (95% CI) | E-bike share |
+|---|---|---|---|
+| Contact / crash events | 828 | 32.0% (28.9–35.3) | 17.0% |
+| Driver didn't see me | 348 | 21.6% (17.6–26.2) | 18.7% |
+| Unsafe / close passing | 1,055 | 18.4% (16.2–20.8) | 17.1% |
+| Failed yield at stop/intersection | 907 | 15.4% (13.2–17.9) | 17.5% |
+| Harassment / aggression | 411 | 13.9% (10.9–17.5) | 17.5% |
+| Infrastructure complaints | 505 | 13.9% (11.1–17.1) | 19.0% |
+| Signal violations | 343 | 11.1% (8.2–14.8) | 15.5% |
 
-### Protocol (implemented in `code/arcgis/gga_typology_module.ipynb`)
-1. Embed masked narratives (HF Text Feature Extraction, 384-dim, CPU-validated).
-2. L2-normalize → PCA(15) → **HDBSCAN, min_cluster_size = 30** (KMeans
-   silhouette-sweep fallback is wired in but at this n HDBSCAN should hold).
-3. Stability: 10 bootstrap resamples, adjusted Rand index; clusters that dissolve
-   are not reported as typologies.
-4. Naming: top TF-IDF terms + 5 center-nearest + 15 random narratives per cluster;
-   a cluster that can't be named coherently is reported unnamed.
-5. Validation: injury rate per typology with Wilson CIs, chi-square; map colored
-   by typology.
-6. **E-bike inference (projection, never e-bike-only clustering):**
-   - Composition: typology × ebike chi-square ("e-bikes over-represented in X").
-   - Severity within typology: injury rate e-bike vs pedal *inside* each typology
-     (controls for mechanism mix).
-   - Hypothesized e-bike-specific mechanisms (driver misjudges speed, heavy-bike
-     low-speed falls, throttle starts): targeted similarity search from seed
-     sentences, reported qualitatively — not clustering.
-7. Conversion to named factors: for 2–4 risk-distinct typologies, binary flags
-   (keyword rules or a small text classifier), validated on 100 hand-labeled
-   incidents, then entered into the logistic model next to the survey fields for
-   odds ratios. Embeddings never appear in the final inferential model.
+- Injury × typology: χ² = 129.4, p ≈ 2e-25. Caveat: the top of the gradient
+  (contact > near-miss) is near-tautological; the informative part is the ordering
+  among conflict types and the typology labels themselves (e.g. harassment, n=411 —
+  a category no official crash form records).
+- **E-bike composition: NULL.** χ² = 2.4, p = 0.88; e-bike share flat (15.5–19.0%)
+  across typologies. Well-powered at this n: e-bikes experience the same mechanism
+  mix as pedal bikes. This licenses pooling mechanisms in Study 2 and kills the
+  "e-bikes crash differently" hypothesis at this grain.
 
-### Effort
-~1 day embedding + clustering on fresh data (module notebook is ready); ~1 day
-naming + validation + e-bike projection; ~0.5 day flags + regression.
+### Remaining Study 1 work
+- Pending: `p_type` cross-tab (validity check that contact_crash is
+  collision-dominated); typology map; bootstrap stability on the k=14 solution.
+- Conversion to named factors (for Study 2 and the R models): per-typology binary
+  flags validated on 100 hand-labeled narratives.
 
 ---
 
-## Study 2 — Injury prediction ablation (US only, AutoML)
+## Study 2 — E-bike severity, given the same crash (the centerpiece)
 
 ### Question
-Beyond the survey fields, how much predictive signal do (a) the narratives and
-(b) census geodemographic context each add — and do they overlap?
+Conditional on an incident occurring, do e-bike incidents end worse than pedal-bike
+incidents — overall, by rider age, and by e-bike class?
 
 ### Cohort
-US mainland reports, post-2016-11-30, `personal_involvement == "Yes"`, known
-`ebike`, usable masked narrative (n ≈ 1,563 on the fresh pull — all bike types,
-`ebike` as a predictor flag). **No e-bike-only model** (n ≈ 150 is below any
-defensible threshold); e-bike results are descriptive only.
+The Study 1 corpus (personally involved, known ebike, masked English narrative),
+pooled US+Canada. ~770 e-bike, ~3,630 pedal.
 
-### Conditions (identical rows and splits everywhere)
-| Run | Predictors | Purpose |
-|---|---|---|
-| A | survey fields (+ `ebike`, `log_pop`) | baseline |
-| C | A + masked-text embeddings (384d) | narrative signal |
-| G | A + USA Geodemographic Embeddings (256d, H3 res-7 join) | census-context signal |
-| CG | A + both | overlap vs complement |
+### Primary analysis — ordinal severity, confounder-adjusted
+1. **Outcome: ordinal, not binary.** The `injury3` ladder (no injury / injury
+   untreated / injury with medical care), since an e-bike effect plausibly lives in
+   the severity tail. Ordinal (proportional-odds) logistic regression.
+2. **Exposure:** `ebike`, adjusted for **mechanism typology** (Study 1 labels),
+   **age** (`age_imp` — the decisive confounder: e-bike riders skew older and age
+   independently worsens outcomes; include `ebike × age` interaction), gender, and
+   the survey fields used in `bin_logit.Rmd`.
+3. Report the adjusted e-bike odds ratio with CI; proportional-odds assumption
+   checked (Brant test); binary-outcome logistic as sensitivity.
 
-Optional: C_raw (raw-text embeddings) to quantify leakage, as in the first draft.
+### Secondary analysis — the within-e-bike class gradient
+`ebike_class` (class 1 pedal-assist <20 mph / throttle <20 mph / class 3 >20 mph;
+filled for ~2/3 of e-bike reports) and `ebike_speed`. Ordinal severity across
+classes **within e-bikes only** — no pedal-bike confounding, same reporting
+channel, and it maps directly onto the regulatory question (speed/class caps).
+A monotone class gradient is the strongest policy sentence available from this
+dataset; a flat one is evidence against class-based regulation. Report missingness
+pattern for `ebike_class` honestly (who leaves it blank may not be random).
 
-### Pipeline
-1. Text embeddings: same Generate Embeddings → Extract To Fields chain as Study 1
-   (reuse the Study 1 vectors for the US subset — one embedding pass serves both
-   studies).
-2. Geodemographic embeddings: explicit spatial join of incident points to the USA
-   Geodemographic Embeddings H3 layer (Living Atlas) so that all conditions run
-   through one identical harness. The AutoML **Use Location Embeddings** checkbox
-   is run once as the in-product demonstration, not as the measured condition.
-3. Evaluation harness (sklearn in the Pro notebook): **20 repeated stratified
-   80/20 splits**, seeds 1–20, identical across conditions; PCA fit on training
-   folds only (≈50 components for text, ≈30 for geodemographic); penalized
-   logistic + gradient boosting, reported separately; metrics AUC (primary),
-   PR-AUC, Brier, calibration slope.
-4. One Train Using AutoML (Basic) run per condition on split seed 1 for the SHAP
-   report and product demo.
+### Embedding-supported sensitivity analyses (embeddings as instruments, not models)
+1. **Narrative-twin matching:** for each e-bike incident, the nearest pedal
+   narrative by cosine similarity on masked embeddings (threshold ≥0.6; unmatched
+   reported). Paired severity comparison (McNemar / Wilcoxon on the ordinal
+   outcome). Matches on *everything the narrative encodes at once* — the strongest
+   available control for "same crash".
+2. **Discriminative probe:** classifier predicting ebike vs pedal from masked
+   embeddings alone, 20-fold repeated CV. AUC ≈ 0.5 ⇒ narratives are
+   linguistically indistinguishable (the composition null at every grain). AUC
+   above chance ⇒ interrogate via SHAP + nearest-narrative reading; guard against
+   confounds (e-bike reports skew recent and geographically — test within
+   year × region strata before interpreting).
+3. **Seeded hypothesis retrieval:** literature-derived mechanism seeds ("driver
+   misjudged my speed and turned in front of me", "the bike was too heavy to hold
+   when stopping", "throttle start surprised a pedestrian"); compare retrieval
+   rates e-bike vs pedal at fixed similarity. Qualitative/supporting evidence only.
 
-### Decision rules (pre-registered)
-- ΔAUC per split (paired), mean + 95% CI over 20 splits; "adds signal" = CI
-  excludes 0 AND mean ΔAUC ≥ 0.02. Applied to C−A, G−A, CG−A, and CG−C (does
-  geography add anything once text is in?).
-- **Metro-identity sensitivity check:** 22% of US reports sit in 10 ~2-km cells,
-  so the geodemographic vectors partially encode "which city." Re-run A with a
-  city/region fixed effect added; if G's lift over that augmented baseline
-  vanishes, report G as proxying metro identity rather than neighborhood context.
-- Leakage (if C_raw is run): mean AUC(C_raw) − AUC(C), reported regardless.
+### Deliverable sentences this study is designed to produce
+- "Adjusted for mechanism and age, e-bike incidents carry OR = X (CI) for higher
+  injury severity" (or the null).
+- "Within e-bikes, class-3/throttle incidents show [gradient / no gradient] in
+  severity."
+- "E-bike and pedal narratives are [indistinguishable / distinguishable] to a
+  classifier" as the composition evidence.
 
 ### Effort
-~0.5 day geodemographic join; ~1 day harness + runs (text vectors reused);
-~0.5 day write-up.
+~1 day primary + class models (R or statsmodels; fields already prepared);
+~1 day twins + probe (embeddings already computed); ~0.5 day write-up.
+
+---
+
+## Study 3 — Injury prediction ablation (US only, AutoML) — Esri methods demo
+
+Unchanged in design (conditions A / C / G / CG on identical rows and 20 repeated
+splits; geodemographic embeddings joined explicitly from the Living Atlas H3
+layer; AutoML Basic once per condition for SHAP; pre-registered ΔAUC ≥ 0.02 rule
+on C−A, G−A, CG−A, CG−C; metro-identity sensitivity check with a city fixed
+effect). Cohort n ≈ 1,563 US masked narratives, all bike types. Its purpose is
+the product-facing question — what do text and census-context embeddings add to
+tabular prediction — not e-bike inference. Reuses Study 1's text vectors for the
+US subset.
 
 ---
 
 ## Shared practicalities
-- Text model pinned: `all-MiniLM-L6-v2` (384-dim) via the HF Text Feature
-  Extraction dlpk; note dlpk version in write-ups.
-- Seeds fixed: splits 1–20; clustering 1208.
-- Both studies run inside ArcGIS Pro notebooks on CPU; the geodemographic join
-  needs the Living Atlas layer (sign-in), nothing else is new.
-- Combined report: typology table + map + e-bike projection (Study 1); ΔAUC
-  ablation table + SHAP for run A (Study 2); leakage and metro-identity
-  sensitivity results as appendices.
+- Text model pinned: `all-MiniLM-L6-v2` (384-d) via HF Text Feature Extraction
+  dlpk; CPU throughout (no CUDA hardware — Intel UHD 770; the Location Encoder
+  CPU patch covers any location-embedding need, and AGOL "Advanced with GPU"
+  notebooks are the fallback for genuinely GPU-bound steps).
+- Seeds: clustering/sampling 1208; CV splits 1–20.
+- Known product issue to file with Esri: LocationEncoder.dlpk hard-codes
+  `.cuda()` with no CPU fallback.
+- Combined report: typology table + map (Study 1), the three e-bike deliverable
+  sentences (Study 2), ΔAUC ablation table (Study 3), leakage and language
+  handling as appendices.

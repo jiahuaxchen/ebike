@@ -114,13 +114,36 @@ pattern for `ebike_class` honestly (who leaves it blank may not be random).
    when stopping", "throttle start surprised a pedestrian"); compare retrieval
    rates e-bike vs pedal at fixed similarity. Qualitative/supporting evidence only.
 
-### Deliverable sentences this study is designed to produce
-- "Adjusted for mechanism and age, e-bike incidents carry OR = X (CI) for higher
-  injury severity" (or the null).
-- "Within e-bikes, class-3/throttle incidents show [gradient / no gradient] in
-  severity."
-- "E-bike and pedal narratives are [indistinguishable / distinguishable] to a
-  classifier" as the composition evidence.
+### RESULTS — primary analysis (executed 2026-10-19)
+- Crude: e-bike reports less often injury reports (16.3% vs 17.9%; severe-injury
+  6.5% vs 10.7%, p=0.0004). **Explained as a reporting artifact:** injury share in
+  all reports fell ~26% (2017) → ~14% (2025) as near-miss reporting grew, and
+  e-bike reports concentrate in the recent era (and are modestly more
+  near-miss-heavy: 77% vs 72%).
+- **Adjusted (typology + age + year): OR = 0.90 (95% CI 0.69–1.18), n=2,787 —
+  null.** Given a collision: injury 68.8% (e-bike) vs 67.2% (pedal) — identical.
+- Age is a non-confounder here: mean age-at-incident 40.8 (e-bike) vs 40.1
+  (pedal); missingness equal (38.0% vs 36.3%).
+- The earlier harassment cell (4.2% vs 15.9%, p=0.009) is treated as spurious:
+  marginal after 7-test correction and consistent with the era artifact.
+- Write-up caveats: 2016 is December only (n=18); 2026 partial year; all results
+  conditional on the decision to report — "injured less" vs "reports injuries
+  less" is separable only via the twin-matching sensitivity analysis.
+
+### Deliverable sentences (1 and the severity half of 2 now filled)
+1. E-bike riders experience the same mix of incident mechanisms as pedal cyclists
+   (χ²=2.4, p=0.88, n=4,397, seven narrative-derived typologies).
+2. Given the same mechanism, rider age and reporting era, e-bike incidents show
+   no difference in injury odds (adjusted OR 0.90, 0.69–1.18); given a collision,
+   injury rates are near-identical (69% vs 67%). **Class gradient: pending.**
+3. Methods finding: subgroup comparisons in crowdsourced incident data are
+   confounded by report year (injury share fell 26%→14% over 2017–2025); the
+   crude e-bike "protective" signal vanished under year adjustment.
+
+### Remaining
+- **Within-e-bike class gradient (`ebike_class`, `ebike_speed`)** — the priority;
+  direct regulatory relevance.
+- Discriminative probe and narrative-twin matching as robustness checks.
 
 ### Effort
 ~1 day primary + class models (R or statsmodels; fields already prepared);

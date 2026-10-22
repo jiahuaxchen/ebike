@@ -91,6 +91,47 @@ injury 68.8% (e-bike) vs 67.2% (pedal) — identical. Age is a non-confounder he
 0.60–1.42). The earlier "harassment protective" cell (p=0.009) is treated as
 spurious (7 tests + era artifact).
 
+**Twin-matching analyses (executed 2026-10-19/20; results in notebook + chat
+only — not yet written into the experiment plan).** Matched each e-bike report
+to its best pedal counterpart, always same country + report year ±1, without
+replacement, randomized tie-breaks:
+- **Embedding twins** (match on masked-narrative cosine; 523 unique pairs,
+  median similarity 0.81; top pairs are visibly "the same story"): −1.9pp,
+  McNemar p=0.40 — null. (With replacement it was −3.6pp p=0.048 — shown to be
+  inflated by twin reuse, max 13×: a methods lesson, not a finding.)
+- **Field twins v2** (hard match on full-level `incident_with`; soft agreement
+  score over intersection, turning, terrain, road_conditions, cars_on_roadside,
+  sightlines, helmet, trip_purpose, gender, age±10; 763 pairs, median agreement
+  0.9): −4.0pp, p=0.042 — shown to carry **near-miss-mix leakage** (fields can't
+  see event resolution; e-bike reports are more near-miss-heavy).
+- **Field twins v3** (adds `p_type` collision/near-miss to the hard match —
+  estimand becomes "same circumstances AND same event resolution"): ordinal
+  injury ladder (0 none / 1 untreated / 2 medical care) within 747 pairs —
+  **null everywhere**: all pairs mean 0.222 vs 0.245 (sign p=0.32, direction
+  twin-worse); collision pairs 0.98 vs 1.04 (p=0.63); **both-injured pairs
+  (severity|injury, the hospital-literature conditioning): 1.44 vs 1.51, p=0.44,
+  n=82 (limited power — phrase as "no evidence of", not "evidence of no")**.
+- Pattern across designs: the apparent protection shrinks monotonically as the
+  match sees more of the event (coarse fields −3.4pp → fine fields −4.0pp with
+  mix leakage → narrative −1.9pp → p_type-matched ordinal ≈ 0). This gradient
+  itself quantifies that injury-relevant event information lives in the
+  narrative beyond ten well-chosen survey fields ("the value is in the text").
+
+**FINAL FINDING (one paragraph, fully triangulated):** In ~4,400 rider-reported
+incidents, e-bike and pedal riders experience the same mix of incident
+mechanisms, and matched comparisons — on circumstances, on event type, and on
+the narrative itself — show no difference in injury occurrence or severity,
+including among pairs where both riders were injured. The apparently lower
+injury share in e-bike reports is fully explained by reporting era. Limits:
+no exposure denominator; outcomes conditional on the decision to report;
+limited power in the severity-given-injury stratum.
+
+**Three demonstrated methods lessons (paper paragraphs / module exercises):**
+(1) report-year confounding in crowdsourced subgroup comparisons (26%→14%
+injury-share decline); (2) reused-control inflation in with-replacement
+matching (p=0.048 → 0.40 without replacement); (3) outcome-mix leakage in
+field-based matching (−4.0pp → null once event resolution is matched).
+
 **Prior work this corrects/extends (from the research log):** the 2025 text
 co-occurrence impression "e-bike ≈ intersection-related" is not supported once a
 pedal baseline is used (composition null). Separate e-bike/pedal regressions
@@ -136,11 +177,16 @@ report-year artifact possibly a standalone methods note.
 
 ## 6. Remaining work
 
+**The analysis phase is done** (as of 2026-10-20); what remains is assembly.
 Module: ablation lab (Study 3 design in `docs/text_embedding_experiment_plan.md`),
 geodemographic H3 join, closing-lesson materials, cluster naming answer key,
-typology map, k=14 bootstrap stability check, `p_type` validity cross-tab.
-Paper: NVivo-codebook scaling; transfer test; twins; probe; OSM covariates +
-intersection recovery; write-up.
+typology map, k=14 bootstrap stability check, `p_type` validity cross-tab; the
+field-twins-vs-embedding-twins contrast is a ready-made capstone exercise.
+Paper: record the twins/ordinal series in the experiment plan's results section
+(not yet done); NVivo-codebook scaling (627 hand-coded e-bike narratives as
+training labels — strongest remaining analysis); transfer test; discriminative
+probe; OSM covariates + intersection-variable recovery; write-up. Manager brief
+(Claude doc) pre-dates all results and needs a full refresh before reuse.
 
 ## 7. Key documents in the repo (branch `claude/wonderful-cerf-a9rbub`)
 
